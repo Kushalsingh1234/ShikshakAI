@@ -102,7 +102,7 @@ export default function App() {
             <GraduationCap size={24} />
           </div>
           <div className="brand-text">
-            <h2>AI Teacher Studio</h2>
+            <h2>ShikshakAI</h2>
             <span className="subtitle">Adaptive Video Educator • 2026 Hackathon</span>
           </div>
         </div>
