@@ -1,0 +1,40 @@
+export const TEACHERS = [
+  {
+    id: "dr-maya",
+    name: "Dr. Maya",
+    role: "Physics & Mathematics Specialist",
+    avatarBg: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+    accentColor: "#6366f1",
+    specialty: "STEM & Science",
+    voiceHint: "Warm, analytical, structured",
+    tone: "Analytical & Socratic",
+    greeting: "Welcome! Let's break down complex physical phenomena and mathematical intuitions together step-by-step.",
+    avatarKey: "dr_maya",
+  },
+  {
+    id: "prof-alex",
+    name: "Prof. Alex",
+    role: "Computer Science & AI Engineer",
+    avatarBg: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+    accentColor: "#06b6d4",
+    specialty: "Programming & Algorithms",
+    voiceHint: "Energetic, practical, code-focused",
+    tone: "Hands-on & Pragmatic",
+    greeting: "Hey there! Ready to write clean code, trace algorithms, and build intuitive mental models together?",
+    avatarKey: "prof_alex",
+  },
+  {
+    id: "ananya",
+    name: "Ananya Ma'am",
+    role: "Humanities, Literature & Hindi Mentor",
+    avatarBg: "linear-gradient(135deg, #f59e0b, #ec4899)",
+    accentColor: "#f59e0b",
+    specialty: "Humanities & Languages",
+    voiceHint: "Gentle, culturally rich, storytelling",
+    tone: "Empathetic & Story-driven",
+    greeting: "नमस्ते! Welcome. Let us explore rich ideas, deep contexts, and poetic expressions together.",
+    avatarKey: "ananya",
+  },
+];
+
+export const DEFAULT_TEACHER = TEACHERS[0];
