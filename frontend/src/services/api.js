@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000");
 
 export async function checkBackendHealth() {
   try {
@@ -41,6 +41,9 @@ export async function generateTTS(text, language = "en") {
   });
   if (!res.ok) throw new Error("Failed to generate speech");
   const data = await res.json();
+  if (data.audio_url.startsWith("data:")) {
+    return data.audio_url;
+  }
   return `${BACKEND_URL}${data.audio_url}`;
 }
 

@@ -1,9 +1,7 @@
 import edge_tts
 import asyncio
-import os
-import uuid
+import base64
 
-# Free Edge-TTS Voices
 VOICE_MAPPINGS = {
     "en": "en-IN-NeerjaNeural",         # Natural Indian English
     "en-US": "en-US-ChristopherNeural", # American English
@@ -11,18 +9,19 @@ VOICE_MAPPINGS = {
     "hinglish": "hi-IN-MadhurNeural",   # Hinglish / Indian Accent
 }
 
-async def generate_speech(text: str, language: str = "en", output_dir: str = "static/audio") -> str:
+async def generate_speech(text: str, language: str = "en") -> str:
     """
-    Generates high quality neural voice audio using Microsoft Edge TTS (100% free, no API key).
-    Returns relative filepath to the generated mp3 file.
+    Generates high-quality neural voice audio using Microsoft Edge TTS in-memory.
+    Returns a data URI string (data:audio/mp3;base64,...) that plays directly in browsers
+    and works 100% reliably in serverless environments like Vercel and AWS.
     """
-    os.makedirs(output_dir, exist_ok=True)
     voice = VOICE_MAPPINGS.get(language.lower(), "en-IN-NeerjaNeural")
-    
-    filename = f"{uuid.uuid4().hex}.mp3"
-    filepath = os.path.join(output_dir, filename)
-    
     communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(filepath)
     
-    return f"/static/audio/{filename}"
+    audio_bytes = bytearray()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_bytes.extend(chunk["data"])
+            
+    b64_audio = base64.b64encode(audio_bytes).decode("utf-8")
+    return f"data:audio/mp3;base64,{b64_audio}"
