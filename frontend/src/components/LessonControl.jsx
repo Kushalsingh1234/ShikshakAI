@@ -33,6 +33,7 @@ export default function LessonControl({ onStartLesson, isLoading }) {
       learner_level: learnerLevel,
       target_duration_minutes: duration,
       language,
+      uploaded_filename: uploadedFileName || null,
     });
   };
 

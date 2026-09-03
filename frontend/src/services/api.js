@@ -21,11 +21,11 @@ export async function uploadDocument(file) {
   return await res.json();
 }
 
-export async function fetchLessonPlan({ topic, learner_level, target_duration_minutes, language }) {
+export async function fetchLessonPlan({ topic, learner_level, target_duration_minutes, language, uploaded_filename }) {
   const res = await fetch(`${BACKEND_URL}/api/lesson/plan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic, learner_level, target_duration_minutes, language }),
+    body: JSON.stringify({ topic, learner_level, target_duration_minutes, language, uploaded_filename }),
   });
   if (!res.ok) throw new Error("Failed to generate lesson plan");
   return await res.json();

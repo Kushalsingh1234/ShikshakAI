@@ -3,18 +3,19 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 
 from services.tts_service import generate_speech
-from services.lesson_service import LessonPlan, get_sample_lesson_plan
+from services.lesson_service import LessonPlan
+from services.ai_brain import generate_pedagogical_lesson, evaluate_student_response
+from services.rag_service import extract_document_content
 
 app = FastAPI(
-    title="AI Teacher Brain Backend",
-    description="Zero-budget pedagogical AI educator API for AI Innovation Hackathon 2026",
-    version="1.0.0"
+    title="ShikshakAI Engine",
+    description="Zero-budget pedagogical AI educator for AI Innovation Hackathon 2026",
+    version="2.0.0"
 )
 
-# Enable CORS for Frontend (Vite running on localhost:5173 or other ports)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,17 +24,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure static directories exist for generated audio & uploaded docs
 os.makedirs("static/audio", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# In-memory document storage for current active uploaded content
+ACTIVE_DOCUMENTS: Dict[str, str] = {}
 
 class LessonRequest(BaseModel):
     topic: str = "Ohm's Law"
     learner_level: str = "beginner"          # beginner | intermediate | advanced
     target_duration_minutes: int = 20       # 5 | 20 | 60 | 7-day
     language: str = "en"                    # en | hi | hinglish
+    uploaded_filename: Optional[str] = None
 
 class EvaluationRequest(BaseModel):
     question: str
@@ -46,17 +50,18 @@ class EvaluationRequest(BaseModel):
 async def health_check():
     return {
         "status": "healthy",
-        "service": "AI Teacher Engine",
+        "service": "ShikshakAI Engine",
         "zero_cost_stack": {
             "tts": "Edge-TTS Neural (Free)",
-            "llm": "Google Gemini 1.5/2.0 Flash (Free Tier)",
-            "rag": "ChromaDB Embedded (Free)"
+            "llm": "Google Gemini 3.6 Flash (Free Tier)",
+            "fallback_llm": "Groq (Free Tier)",
+            "rag": "Multi-format Document Extraction (PDF, DOCX, PPTX)"
         }
     }
 
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
-    """Accepts PDF, DOCX, PPTX, TXT files for RAG extraction."""
+    """Accepts PDF, DOCX, PPTX, TXT files, extracts content for RAG grounding."""
     allowed_exts = [".pdf", ".docx", ".pptx", ".txt"]
     file_ext = os.path.splitext(file.filename)[1].lower()
     
@@ -64,26 +69,38 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Unsupported file type {file_ext}. Allowed: {allowed_exts}")
         
     save_path = os.path.join("uploads", file.filename)
+    content = await file.read()
     with open(save_path, "wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(content)
         
+    # Extract readable text
+    extracted_text = extract_document_content(save_path)
+    ACTIVE_DOCUMENTS[file.filename] = extracted_text
+
     return {
         "filename": file.filename,
         "saved_path": save_path,
-        "message": f"Successfully uploaded {file.filename}. Ready for RAG processing."
+        "extracted_length": len(extracted_text),
+        "message": f"Successfully parsed {file.filename} ({len(extracted_text)} characters). Grounding ready."
     }
 
 @app.post("/api/lesson/plan", response_model=LessonPlan)
 async def create_lesson_plan(request: LessonRequest):
     """
-    Generates structured lesson plan adhering to pedagogical cycle:
-    Understand -> Plan -> Explain -> Demonstrate -> Question -> Evaluate -> Adapt -> Continue
+    Generates structured lesson plan using Google Gemini with Groq fallback.
+    Understands topic or uploaded document, creates subject-aware visuals (KaTeX, Mermaid, Code),
+    and sets up checkpoints for misconception detection.
     """
-    plan = get_sample_lesson_plan(
+    doc_context = None
+    if request.uploaded_filename and request.uploaded_filename in ACTIVE_DOCUMENTS:
+        doc_context = ACTIVE_DOCUMENTS[request.uploaded_filename]
+
+    plan = generate_pedagogical_lesson(
         topic=request.topic,
         level=request.learner_level,
-        duration=request.target_duration_minutes,
-        language=request.language
+        duration_minutes=request.target_duration_minutes,
+        language=request.language,
+        document_context=doc_context
     )
     return plan
 
@@ -96,24 +113,17 @@ async def text_to_speech(text: str = Form(...), language: str = Form("en")):
 @app.post("/api/evaluate")
 async def evaluate_answer(req: EvaluationRequest):
     """
-    Evaluates student answer, checks for conceptual misconceptions,
-    and returns tailored feedback.
+    Pedagogically evaluates student response:
+    Detects conceptual misconceptions, explains intuition with fresh analogies, and adapts next steps.
     """
-    is_correct = req.student_answer.strip().lower() in req.correct_answer.lower()
-    
-    if is_correct:
-        feedback = "Excellent! You nailed the concept. Notice how the inverse relationship keeps the equation balanced."
-        misconception_detected = False
-    else:
-        misconception_detected = True
-        feedback = f"Not quite! Here is the intuition: think of resistance like friction or a constriction in a water pipe. When resistance goes up, it becomes harder for current to pass, so current decreases."
-
-    return {
-        "is_correct": is_correct,
-        "misconception_detected": misconception_detected,
-        "feedback": feedback,
-        "adaptive_action": "proceed" if is_correct else "re_explain_with_analogy"
-    }
+    result = evaluate_student_response(
+        question=req.question,
+        student_answer=req.student_answer,
+        correct_answer=req.correct_answer,
+        misconception_guide=req.misconception_guide,
+        language=req.language
+    )
+    return result
 
 if __name__ == "__main__":
     import uvicorn
