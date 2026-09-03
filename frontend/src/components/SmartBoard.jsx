@@ -1,0 +1,98 @@
+import React, { useEffect, useRef } from "react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+import mermaid from "mermaid";
+import { BookOpen, Award, CheckCircle2 } from "lucide-react";
+
+export default function SmartBoard({ visual, lessonTitle, currentStep, totalSteps }) {
+  const mathRef = useRef(null);
+  const mermaidRef = useRef(null);
+
+  useEffect(() => {
+    mermaid.initialize({ startOnLoad: false, theme: "dark" });
+  }, []);
+
+  // Render KaTeX Math equations
+  useEffect(() => {
+    if (visual?.type === "katex" && mathRef.current) {
+      try {
+        katex.render(visual.content, mathRef.current, {
+          throwOnError: false,
+          displayMode: true,
+        });
+      } catch (err) {
+        console.error("KaTeX render error:", err);
+      }
+    }
+  }, [visual]);
+
+  // Render Mermaid diagrams
+  useEffect(() => {
+    if (visual?.type === "mermaid" && mermaidRef.current) {
+      mermaidRef.current.innerHTML = "";
+      const uniqueId = "mermaid-" + Math.random().toString(36).substring(2, 9);
+      mermaid.render(uniqueId, visual.content).then(({ svg }) => {
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = svg;
+        }
+      }).catch(err => {
+        console.error("Mermaid diagram render error:", err);
+      });
+    }
+  }, [visual]);
+
+  return (
+    <div className="smartboard-card">
+      <div className="smartboard-header">
+        <div className="smartboard-title-group">
+          <BookOpen size={18} className="text-indigo-400" />
+          <h3 className="smartboard-topic">{lessonTitle || "Interactive Blackboard"}</h3>
+        </div>
+        <div className="step-progress-badge">
+          Step {currentStep || 1} of {totalSteps || 4}
+        </div>
+      </div>
+
+      <div className="smartboard-canvas">
+        {visual ? (
+          <div className="visual-container">
+            <h4 className="visual-title">{visual.title}</h4>
+
+            {visual.type === "katex" && (
+              <div className="formula-display-box" ref={mathRef}></div>
+            )}
+
+            {visual.type === "mermaid" && (
+              <div className="diagram-display-box" ref={mermaidRef}></div>
+            )}
+
+            {visual.type === "bullet_points" && (
+              <div className="bullet-points-box">
+                {visual.content.split("\n").map((line, idx) => (
+                  <div key={idx} className="bullet-item">
+                    <CheckCircle2 size={16} className="bullet-check" />
+                    <span>{line.replace(/^[0-9]+\.\s*|\•\s*/, "")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {visual.type === "code" && (
+              <pre className="code-display-box">
+                <code>{visual.content}</code>
+              </pre>
+            )}
+          </div>
+        ) : (
+          <div className="smartboard-placeholder">
+            <div className="placeholder-icon-wrap">
+              <Award size={42} />
+            </div>
+            <h4>Welcome to your personalized AI classroom</h4>
+            <p>Upload your textbook or enter a topic to start an adaptive video lesson.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
