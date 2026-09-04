@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Sparkles, ChevronDown, UserCheck, RotateCcw, FastForward, Volume2 } from "lucide-react";
+import { Sparkles, ChevronDown, UserCheck, RotateCcw, FastForward, Radio } from "lucide-react";
 import { TEACHERS } from "../constants/teachers";
 
 export default function TeacherAvatar({
@@ -59,7 +59,7 @@ export default function TeacherAvatar({
             audioContextRef.current.resume();
           }
         })
-        .catch((e) => console.log("Audio autoplay notice:", e));
+        .catch((e) => console.log("Audio playback notice:", e));
     }
   }, [audioUrl, playbackSpeed, initAudioAnalyser]);
 
@@ -67,9 +67,9 @@ export default function TeacherAvatar({
   useEffect(() => {
     if (!isPlaying) {
       if (mouthRef.current) {
-        mouthRef.current.setAttribute("ry", "1.5");
-        mouthRef.current.setAttribute("rx", "12");
-        mouthRef.current.setAttribute("opacity", "0.7");
+        mouthRef.current.setAttribute("ry", "2");
+        mouthRef.current.setAttribute("rx", "14");
+        mouthRef.current.setAttribute("opacity", "0.75");
       }
       waveBarsRef.current.forEach((bar) => {
         if (bar) bar.style.height = "4px";
@@ -109,13 +109,13 @@ export default function TeacherAvatar({
       // DIRECT DOM UPDATE: No React re-renders = 60fps butter smooth
       if (mouthRef.current) {
         if (normalized > 0.08) {
-          mouthRef.current.setAttribute("rx", `${11 + normalized * 5}`);
-          mouthRef.current.setAttribute("ry", `${3.5 + normalized * 8.5}`);
+          mouthRef.current.setAttribute("rx", `${12 + normalized * 6}`);
+          mouthRef.current.setAttribute("ry", `${3.5 + normalized * 9}`);
           mouthRef.current.setAttribute("opacity", "1");
         } else {
-          mouthRef.current.setAttribute("rx", "12");
-          mouthRef.current.setAttribute("ry", "1.5");
-          mouthRef.current.setAttribute("opacity", "0.6");
+          mouthRef.current.setAttribute("rx", "14");
+          mouthRef.current.setAttribute("ry", "2");
+          mouthRef.current.setAttribute("opacity", "0.7");
         }
       }
 
@@ -164,258 +164,329 @@ export default function TeacherAvatar({
 
   const activeTeacher = currentTeacher || TEACHERS[0];
 
+  // Modern, dignified, stylish educator SVG graphics
   const renderAvatarSVG = () => {
     if (activeTeacher.avatarKey === "prof_alex") {
       return (
-        <svg viewBox="0 0 400 450" className={`teacher-svg ${isPlaying ? "speaking" : "idle"}`}>
+        <svg viewBox="0 0 400 440" className="studio-avatar-svg">
           <defs>
-            <radialGradient id="alexGlow" cx="50%" cy="40%" r="50%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#082f49" stopOpacity="0" />
+            <radialGradient id="alexStudioBack" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#0e2a47" />
+              <stop offset="100%" stopColor="#081321" />
             </radialGradient>
-            <linearGradient id="hoodieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
+            <linearGradient id="alexHoodie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <linearGradient id="alexHair" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#334155" />
+            <linearGradient id="alexHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
           </defs>
 
-          <circle cx="200" cy="180" r="160" fill="url(#alexGlow)" />
-          <path d="M 70 450 C 80 310, 130 275, 200 275 C 270 275, 320 310, 330 450 Z" fill="url(#hoodieGradient)" />
-          <path d="M 170 275 Q 200 320 230 275" fill="#06b6d4" opacity="0.4" />
-          <line x1="200" y1="310" x2="200" y2="450" stroke="#06b6d4" strokeWidth="2" strokeDasharray="4 2" />
+          <rect width="400" height="440" fill="url(#alexStudioBack)" />
+          
+          {/* Studio Camera Grid Overlay */}
+          <g stroke="rgba(6, 182, 212, 0.12)" strokeWidth="1" strokeDasharray="3 3">
+            <line x1="133" y1="0" x2="133" y2="440" />
+            <line x1="267" y1="0" x2="267" y2="440" />
+            <line x1="0" y1="146" x2="400" y2="146" />
+            <line x1="0" y1="293" x2="400" y2="293" />
+          </g>
 
-          <rect x="180" y="220" width="40" height="65" rx="8" fill="#fcd34d" />
-          <ellipse cx="200" cy="155" rx="86" ry="98" fill="url(#alexHair)" />
-          <ellipse cx="200" cy="178" rx="70" ry="82" fill="#fde68a" />
-          <path d="M 125 150 Q 160 95 200 115 Q 240 100 275 145 Q 240 125 200 125 Q 160 125 125 150" fill="url(#alexHair)" />
+          {/* Shoulders & Jacket */}
+          <path d="M 60 440 C 75 300, 130 260, 200 260 C 270 260, 325 300, 340 440 Z" fill="url(#alexHoodie)" />
+          <path d="M 160 260 L 200 320 L 240 260" fill="#06b6d4" opacity="0.25" />
+          <line x1="200" y1="310" x2="200" y2="440" stroke="#06b6d4" strokeWidth="2" opacity="0.4" />
 
-          <path d="M 152 154 Q 172 148 185 154" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
-          <path d="M 215 154 Q 228 148 248 154" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+          {/* Neck */}
+          <rect x="182" y="205" width="36" height="65" rx="6" fill="#fcd34d" opacity="0.95" />
 
-          <rect x="146" y="160" width="42" height="28" rx="6" fill="none" stroke="#06b6d4" strokeWidth="3" />
-          <rect x="212" y="160" width="42" height="28" rx="6" fill="none" stroke="#06b6d4" strokeWidth="3" />
-          <line x1="188" y1="172" x2="212" y2="172" stroke="#06b6d4" strokeWidth="3" />
+          {/* Hair Base */}
+          <ellipse cx="200" cy="145" rx="80" ry="90" fill="url(#alexHairGrad)" />
 
+          {/* Head & Face */}
+          <ellipse cx="200" cy="165" rx="64" ry="76" fill="#fde68a" />
+
+          {/* Styled Crop Hair */}
+          <path d="M 130 140 Q 160 90 200 105 Q 240 90 270 135 Q 235 115 200 115 Q 165 115 130 140" fill="url(#alexHairGrad)" />
+
+          {/* Eyebrows */}
+          <path d="M 155 142 Q 172 136 186 142" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />
+          <path d="M 214 142 Q 228 136 245 142" fill="none" stroke="#1e293b" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Modern Glasses */}
+          <rect x="150" y="148" width="38" height="26" rx="6" fill="none" stroke="#06b6d4" strokeWidth="2.5" />
+          <rect x="212" y="148" width="38" height="26" rx="6" fill="none" stroke="#06b6d4" strokeWidth="2.5" />
+          <line x1="188" y1="158" x2="212" y2="158" stroke="#06b6d4" strokeWidth="2.5" />
+
+          {/* Eyes */}
           {blink ? (
             <>
-              <line x1="156" y1="174" x2="178" y2="174" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
-              <line x1="222" y1="174" x2="244" y2="174" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
+              <line x1="158" y1="160" x2="180" y2="160" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="220" y1="160" x2="242" y2="160" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
             </>
           ) : (
             <>
-              <circle cx="167" cy="174" r="5" fill="#0f172a" />
-              <circle cx="165" cy="172" r="1.5" fill="#ffffff" />
-              <circle cx="233" cy="174" r="5" fill="#0f172a" />
-              <circle cx="231" cy="172" r="1.5" fill="#ffffff" />
+              <circle cx="169" cy="160" r="4.5" fill="#0f172a" />
+              <circle cx="167" cy="158" r="1.5" fill="#ffffff" />
+              <circle cx="231" cy="160" r="4.5" fill="#0f172a" />
+              <circle cx="229" cy="158" r="1.5" fill="#ffffff" />
             </>
           )}
 
-          <path d="M 198 186 L 195 202 L 205 202" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+          {/* Nose */}
+          <path d="M 198 170 L 195 186 L 204 186" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Direct DOM animated mouth */}
-          <ellipse ref={mouthRef} cx="200" cy="226" rx="12" ry="1.5" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" opacity="0.6" />
+          {/* Dynamic Acoustic Mouth */}
+          <ellipse ref={mouthRef} cx="200" cy="210" rx="14" ry="2" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" />
 
-          <path d="M 125 175 C 120 120, 280 120, 275 175" fill="none" stroke="#06b6d4" strokeWidth="4" />
-          <rect x="120" y="165" width="10" height="22" rx="4" fill="#0284c7" />
-          <rect x="270" y="165" width="10" height="22" rx="4" fill="#0284c7" />
+          {/* Sleek Headset */}
+          <path d="M 130 160 C 125 105, 275 105, 270 160" fill="none" stroke="#0284c7" strokeWidth="3" />
+          <rect x="126" y="150" width="8" height="20" rx="3" fill="#0284c7" />
+          <rect x="266" y="150" width="8" height="20" rx="3" fill="#0284c7" />
         </svg>
       );
     }
 
     if (activeTeacher.avatarKey === "ananya") {
       return (
-        <svg viewBox="0 0 400 450" className={`teacher-svg ${isPlaying ? "speaking" : "idle"}`}>
+        <svg viewBox="0 0 400 440" className="studio-avatar-svg">
           <defs>
-            <radialGradient id="ananyaGlow" cx="50%" cy="40%" r="50%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#78350f" stopOpacity="0" />
+            <radialGradient id="ananyaStudioBack" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#3b1d11" />
+              <stop offset="100%" stopColor="#170c08" />
             </radialGradient>
-            <linearGradient id="kurtaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="100%" stopColor="#9d174d" />
+            <linearGradient id="ananyaKurta" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9a3412" />
+              <stop offset="100%" stopColor="#7c2d12" />
             </linearGradient>
-            <linearGradient id="ananyaHair" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1c1917" />
-              <stop offset="100%" stopColor="#292524" />
+            <linearGradient id="ananyaHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#292524" />
+              <stop offset="100%" stopColor="#171412" />
             </linearGradient>
           </defs>
 
-          <circle cx="200" cy="180" r="160" fill="url(#ananyaGlow)" />
-          <path d="M 75 450 C 85 315, 135 275, 200 275 C 265 275, 315 315, 325 450 Z" fill="url(#kurtaGradient)" />
-          <path d="M 90 450 Q 150 310 185 275 Q 160 380 140 450 Z" fill="#f59e0b" opacity="0.85" />
-          <circle cx="185" cy="285" r="4" fill="#fbbf24" />
+          <rect width="400" height="440" fill="url(#ananyaStudioBack)" />
 
-          <rect x="182" y="218" width="36" height="68" rx="8" fill="#fcd34d" />
-          <ellipse cx="200" cy="180" rx="94" ry="118" fill="url(#ananyaHair)" />
-          <ellipse cx="200" cy="176" rx="68" ry="80" fill="#fde68a" />
-          <path d="M 132 165 Q 200 115 268 165 Q 235 130 200 135 Q 165 130 132 165" fill="url(#ananyaHair)" />
-          <circle cx="200" cy="156" r="3.5" fill="#dc2626" />
+          {/* Studio Camera Grid Overlay */}
+          <g stroke="rgba(245, 158, 11, 0.12)" strokeWidth="1" strokeDasharray="3 3">
+            <line x1="133" y1="0" x2="133" y2="440" />
+            <line x1="267" y1="0" x2="267" y2="440" />
+            <line x1="0" y1="146" x2="400" y2="146" />
+            <line x1="0" y1="293" x2="400" y2="293" />
+          </g>
 
-          <path d="M 154 156 Q 172 150 186 157" fill="none" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" />
-          <path d="M 214 157 Q 228 150 246 156" fill="none" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" />
+          {/* Shoulders & Dupatta */}
+          <path d="M 65 440 C 80 300, 130 260, 200 260 C 270 260, 320 300, 335 440 Z" fill="url(#ananyaKurta)" />
+          <path d="M 80 440 Q 140 300 180 260 Q 150 370 130 440 Z" fill="#f59e0b" opacity="0.75" />
 
+          {/* Neck */}
+          <rect x="183" y="205" width="34" height="65" rx="6" fill="#fcd34d" opacity="0.95" />
+
+          {/* Flowing Dark Hair */}
+          <ellipse cx="200" cy="160" rx="88" ry="110" fill="url(#ananyaHairGrad)" />
+
+          {/* Head & Face */}
+          <ellipse cx="200" cy="165" rx="62" ry="74" fill="#fde68a" />
+
+          {/* Hair Front Parting */}
+          <path d="M 136 150 Q 200 105 264 150 Q 235 115 200 120 Q 165 115 136 150" fill="url(#ananyaHairGrad)" />
+
+          {/* Traditional Bindi */}
+          <circle cx="200" cy="144" r="3" fill="#dc2626" />
+
+          {/* Eyebrows */}
+          <path d="M 156 144 Q 172 138 185 144" fill="none" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 215 144 Q 228 138 244 144" fill="none" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Almond Eyes */}
           {blink ? (
             <>
-              <line x1="156" y1="172" x2="182" y2="172" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" />
-              <line x1="218" y1="172" x2="244" y2="172" stroke="#1c1917" strokeWidth="3" strokeLinecap="round" />
+              <line x1="158" y1="158" x2="182" y2="158" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="218" y1="158" x2="242" y2="158" stroke="#1c1917" strokeWidth="2.5" strokeLinecap="round" />
             </>
           ) : (
             <>
-              <ellipse cx="169" cy="172" rx="7" ry="5.5" fill="#1c1917" />
-              <circle cx="167" cy="170" r="1.8" fill="#ffffff" />
-              <ellipse cx="231" cy="172" rx="7" ry="5.5" fill="#1c1917" />
-              <circle cx="229" cy="170" r="1.8" fill="#ffffff" />
+              <ellipse cx="170" cy="158" rx="6" ry="5" fill="#1c1917" />
+              <circle cx="168" cy="156" r="1.6" fill="#ffffff" />
+              <ellipse cx="230" cy="158" rx="6" ry="5" fill="#1c1917" />
+              <circle cx="228" cy="156" r="1.6" fill="#ffffff" />
             </>
           )}
 
-          <path d="M 198 184 L 195 200 L 204 200" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="207" cy="198" r="1.8" fill="#fbbf24" />
+          {/* Nose & Stud */}
+          <path d="M 198 168 L 196 183 L 203 183" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="206" cy="181" r="1.5" fill="#fbbf24" />
 
-          {/* Direct DOM animated mouth */}
-          <ellipse ref={mouthRef} cx="200" cy="224" rx="12" ry="1.5" fill="#991b1b" stroke="#831843" strokeWidth="1.5" opacity="0.6" />
+          {/* Dynamic Acoustic Mouth */}
+          <ellipse ref={mouthRef} cx="200" cy="208" rx="14" ry="2" fill="#991b1b" stroke="#831843" strokeWidth="1.5" />
 
-          <circle cx="130" cy="192" r="3" fill="#fbbf24" />
-          <polygon points="126,196 134,196 130,204" fill="#f59e0b" />
-          <circle cx="270" cy="192" r="3" fill="#fbbf24" />
-          <polygon points="266,196 274,196 270,204" fill="#f59e0b" />
+          {/* Earrings */}
+          <circle cx="134" cy="175" r="2.5" fill="#fbbf24" />
+          <circle cx="266" cy="175" r="2.5" fill="#fbbf24" />
         </svg>
       );
     }
 
     // Default: Dr. Maya
     return (
-      <svg viewBox="0 0 400 450" className={`teacher-svg ${isPlaying ? "speaking" : "idle"}`}>
+      <svg viewBox="0 0 400 440" className="studio-avatar-svg">
         <defs>
-          <radialGradient id="mayaGlow" cx="50%" cy="40%" r="50%">
-            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0" />
+          <radialGradient id="mayaStudioBack" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#1e1b4b" />
+            <stop offset="100%" stopColor="#0b0a1a" />
           </radialGradient>
-          <linearGradient id="blazerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="mayaBlazer" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#312e81" />
             <stop offset="100%" stopColor="#1e1b4b" />
           </linearGradient>
+          <linearGradient id="mayaHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#312e81" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
         </defs>
 
-        <circle cx="200" cy="180" r="160" fill="url(#mayaGlow)" />
-        <path d="M 80 450 C 90 320, 140 280, 200 280 C 260 280, 310 320, 320 450 Z" fill="url(#blazerGradient)" />
-        <polygon points="180,280 200,320 220,280" fill="#ffffff" />
-        <polygon points="160,280 180,330 200,280" fill="#6366f1" />
-        <polygon points="240,280 220,330 200,280" fill="#6366f1" />
+        <rect width="400" height="440" fill="url(#mayaStudioBack)" />
 
-        <rect x="180" y="220" width="40" height="70" rx="8" fill="#fcd34d" />
-        <ellipse cx="200" cy="160" rx="90" ry="105" fill="#1e1b4b" />
-        <ellipse cx="200" cy="180" rx="72" ry="85" fill="#fde68a" />
-        <path d="M 130 160 Q 200 110 270 160 Q 240 130 200 130 Q 160 130 130 160" fill="#1e1b4b" />
+        {/* Studio Camera Grid Overlay */}
+        <g stroke="rgba(99, 102, 241, 0.12)" strokeWidth="1" strokeDasharray="3 3">
+          <line x1="133" y1="0" x2="133" y2="440" />
+          <line x1="267" y1="0" x2="267" y2="440" />
+          <line x1="0" y1="146" x2="400" y2="146" />
+          <line x1="0" y1="293" x2="400" y2="293" />
+        </g>
 
-        <rect x="150" y="160" width="38" height="26" rx="8" fill="none" stroke="#4338ca" strokeWidth="3" />
-        <rect x="212" y="160" width="38" height="26" rx="8" fill="none" stroke="#4338ca" strokeWidth="3" />
-        <line x1="188" y1="172" x2="212" y2="172" stroke="#4338ca" strokeWidth="3" />
+        {/* Shoulders & Professional Blazer */}
+        <path d="M 65 440 C 80 300, 135 260, 200 260 C 265 260, 320 300, 335 440 Z" fill="url(#mayaBlazer)" />
+        <polygon points="185,260 200,300 215,260" fill="#ffffff" />
+        <polygon points="168,260 185,310 200,260" fill="#6366f1" />
+        <polygon points="232,260 215,310 200,260" fill="#6366f1" />
 
+        {/* Neck */}
+        <rect x="182" y="205" width="36" height="65" rx="6" fill="#fcd34d" opacity="0.95" />
+
+        {/* Hair Base */}
+        <ellipse cx="200" cy="148" rx="84" ry="96" fill="url(#mayaHairGrad)" />
+
+        {/* Head & Face */}
+        <ellipse cx="200" cy="166" rx="66" ry="78" fill="#fde68a" />
+
+        {/* Hair Front Styling */}
+        <path d="M 134 145 Q 200 95 266 145 Q 235 115 200 115 Q 165 115 134 145" fill="url(#mayaHairGrad)" />
+
+        {/* Glasses */}
+        <rect x="152" y="148" width="36" height="24" rx="6" fill="none" stroke="#4f46e5" strokeWidth="2.5" />
+        <rect x="212" y="148" width="36" height="24" rx="6" fill="none" stroke="#4f46e5" strokeWidth="2.5" />
+        <line x1="188" y1="158" x2="212" y2="158" stroke="#4f46e5" strokeWidth="2.5" />
+
+        {/* Eyes */}
         {blink ? (
           <>
-            <line x1="158" y1="173" x2="180" y2="173" stroke="#1f2937" strokeWidth="3" strokeLinecap="round" />
-            <line x1="220" y1="173" x2="242" y2="173" stroke="#1f2937" strokeWidth="3" strokeLinecap="round" />
+            <line x1="158" y1="160" x2="180" y2="160" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="220" y1="160" x2="242" y2="160" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
           </>
         ) : (
           <>
-            <circle cx="169" cy="173" r="5" fill="#1f2937" />
-            <circle cx="167" cy="171" r="1.5" fill="#ffffff" />
-            <circle cx="231" cy="173" r="5" fill="#1f2937" />
-            <circle cx="229" cy="171" r="1.5" fill="#ffffff" />
+            <circle cx="170" cy="160" r="4.5" fill="#1f2937" />
+            <circle cx="168" cy="158" r="1.5" fill="#ffffff" />
+            <circle cx="230" cy="160" r="4.5" fill="#1f2937" />
+            <circle cx="228" cy="158" r="1.5" fill="#ffffff" />
           </>
         )}
 
-        <path d="M 197 185 L 195 202 L 205 202" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Nose */}
+        <path d="M 198 170 L 195 186 L 204 186" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
 
-        {/* Direct DOM animated mouth */}
-        <ellipse ref={mouthRef} cx="200" cy="225" rx="12" ry="1.5" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" opacity="0.6" />
+        {/* Dynamic Acoustic Mouth */}
+        <ellipse ref={mouthRef} cx="200" cy="210" rx="14" ry="2" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" />
       </svg>
     );
   };
 
   return (
-    <div className="teacher-stage-card">
-      <div className="teacher-header">
-        <div className="teacher-picker-wrapper">
+    <div className="studio-stage-card">
+      {/* Studio Header Bar */}
+      <div className="studio-card-header">
+        <div className="educator-dropdown-pill">
           <button
             type="button"
-            className="teacher-profile-badge interactive"
+            className="educator-trigger-btn"
             onClick={() => setIsDropdownOpen((prev) => !prev)}
-            title="Click to switch AI Educator"
+            title="Switch Educator"
           >
-            <div className="status-indicator online"></div>
-            <span className="teacher-title">{activeTeacher.name}</span>
-            <ChevronDown size={14} className={`dropdown-chevron ${isDropdownOpen ? "open" : ""}`} />
+            <span className="live-camera-dot"></span>
+            <span className="educator-display-name">{activeTeacher.name}</span>
+            <ChevronDown size={14} className={`chevron-icon ${isDropdownOpen ? "open" : ""}`} />
           </button>
 
           {isDropdownOpen && (
-            <div className="teacher-dropdown-menu">
-              <div className="dropdown-header">Select Educator</div>
+            <div className="studio-dropdown-popover">
+              <div className="popover-title">Select Educator</div>
               {TEACHERS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  className={`teacher-option ${t.id === activeTeacher.id ? "active" : ""}`}
+                  className={`popover-item ${t.id === activeTeacher.id ? "active" : ""}`}
                   onClick={() => {
                     if (onSelectTeacher) onSelectTeacher(t);
                     setIsDropdownOpen(false);
                   }}
                 >
-                  <div className="teacher-option-bullet" style={{ background: t.accentColor }}></div>
-                  <div className="teacher-option-info">
+                  <div className="popover-bullet" style={{ background: t.accentColor }}></div>
+                  <div className="popover-info">
                     <span className="name">{t.name}</span>
-                    <span className="spec">{t.specialty}</span>
+                    <span className="role">{t.specialty}</span>
                   </div>
-                  {t.id === activeTeacher.id && <UserCheck size={14} className="selected-check" />}
+                  {t.id === activeTeacher.id && <UserCheck size={14} className="selected-icon" />}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="voice-badge">
-          <Sparkles size={13} className="sparkle-icon" />
-          <span>{activeTeacher.specialty}</span>
+        <div className="studio-badge">
+          <Radio size={12} className="text-emerald-400" />
+          <span>STUDIO 1080P</span>
         </div>
       </div>
 
-      <div className="avatar-viewport">
+      {/* Main Studio Viewport */}
+      <div className="studio-viewport-frame">
         {renderAvatarSVG()}
 
-        <div className="speech-status-bar">
-          <div className="wave-bars">
-            <span ref={(el) => (waveBarsRef.current[0] = el)} className="bar" />
-            <span ref={(el) => (waveBarsRef.current[1] = el)} className="bar" />
-            <span ref={(el) => (waveBarsRef.current[2] = el)} className="bar" />
-            <span ref={(el) => (waveBarsRef.current[3] = el)} className="bar" />
+        {/* Bottom Audio Visualizer HUD */}
+        <div className="studio-hud-bar">
+          <div className="hud-wave-bars">
+            <span ref={(el) => (waveBarsRef.current[0] = el)} className="hud-bar" />
+            <span ref={(el) => (waveBarsRef.current[1] = el)} className="hud-bar" />
+            <span ref={(el) => (waveBarsRef.current[2] = el)} className="hud-bar" />
+            <span ref={(el) => (waveBarsRef.current[3] = el)} className="hud-bar" />
           </div>
-          <span className="speech-caption-text">
-            {isPlaying ? `${activeTeacher.name} is speaking...` : `Ready • ${activeTeacher.tone}`}
+          <span className="hud-status-caption">
+            {isPlaying ? `${activeTeacher.name} is speaking...` : `Listening • ${activeTeacher.tone}`}
           </span>
         </div>
       </div>
 
-      <div className="teacher-speech-box">
-        <p className="speech-transcript">"{scriptText || activeTeacher.greeting}"</p>
-        <div className="voice-controls-bar">
+      {/* Speech Caption & Controls Bar */}
+      <div className="studio-transcript-box">
+        <p className="transcript-text">"{scriptText || activeTeacher.greeting}"</p>
+        <div className="transcript-actions-bar">
           <button
             type="button"
-            className="voice-ctrl-chip"
+            className="action-chip"
             onClick={togglePlaybackSpeed}
             title="Adjust voice speed"
           >
             <FastForward size={12} />
-            <span>{playbackSpeed}x</span>
+            <span>{playbackSpeed}x Speed</span>
           </button>
           <button
             type="button"
-            className="voice-ctrl-chip"
+            className="action-chip"
             onClick={replayCurrentSpeech}
-            title="Replay speech"
+            title="Replay explanation"
           >
             <RotateCcw size={12} />
             <span>Replay</span>

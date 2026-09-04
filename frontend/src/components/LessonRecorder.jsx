@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Video, Square, Download, Sparkles, CheckCircle2, Play, AlertCircle, FileDown } from "lucide-react";
+import { Video, Square, Download, Sparkles, CheckCircle2, Play, AlertCircle, FileDown, ScreenShare } from "lucide-react";
 
 export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepScript = "" }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -38,34 +38,65 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
     setErrorMsg(null);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      alert("Screen recording is not supported in this browser environment. You can use the Export Notes button instead!");
+      alert("Screen capture is not supported in this browser. Please use the 'Notes' export button!");
       return;
     }
 
     try {
       let stream;
+      
+      // Configuration 1 (Chrome 107+): Forces Chrome to directly open on the 'Chrome Tab' list
+      // and preselect the current tab with selfBrowserSurface: "include"
+      const chromeTabConfig = {
+        video: {
+          displaySurface: "browser",
+          cursor: "always",
+        },
+        audio: true,
+        preferCurrentTab: true,
+        selfBrowserSurface: "include",
+        systemAudio: "include",
+        surfaceSwitching: "include",
+      };
+
       try {
-        // First try requesting video and system audio
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
-        });
-      } catch (audioErr) {
-        // Fallback to video-only if audio capture is denied or unsupported by OS
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
+        stream = await navigator.mediaDevices.getDisplayMedia(chromeTabConfig);
+      } catch (tabErr) {
+        console.warn("Primary Chrome tab capture config error, trying fallback:", tabErr);
+        try {
+          // Configuration 2: Without audio constraint in case audio device is blocked
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: {
+              displaySurface: "browser",
+            },
+            preferCurrentTab: true,
+            selfBrowserSurface: "include",
+          });
+        } catch (videoOnlyErr) {
+          console.warn("Secondary tab capture error, trying standard capture:", videoOnlyErr);
+          // Configuration 3: Standard getDisplayMedia with preferCurrentTab
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true,
+            preferCurrentTab: true,
+            selfBrowserSurface: "include",
+          });
+        }
+      }
+
+      if (!stream) {
+        throw new Error("No media stream obtained.");
       }
 
       streamRef.current = stream;
       recordedChunksRef.current = [];
 
-      // Determine supported mimeType
+      // Determine supported video format
       let mimeType = "video/webm";
-      if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
-        mimeType = "video/webm;codecs=vp9";
-      } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
-        mimeType = "video/webm;codecs=vp8";
+      if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
+        mimeType = "video/webm;codecs=vp9,opus";
+      } else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+        mimeType = "video/webm;codecs=vp8,opus";
       } else if (MediaRecorder.isTypeSupported("video/mp4")) {
         mimeType = "video/mp4";
       }
@@ -84,11 +115,11 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
         const url = URL.createObjectURL(blob);
         setRecordedBlobUrl(url);
         setShowPreviewModal(true);
-        // Stop all tracks cleanly
+        // Cleanly stop all tracks
         stream.getTracks().forEach((track) => track.stop());
       };
 
-      // Handle user stopping screen share via browser floating bar
+      // Handle user stopping screen share via Chrome floating pill
       if (stream.getVideoTracks().length > 0) {
         stream.getVideoTracks()[0].onended = () => {
           stopRecording();
@@ -99,9 +130,8 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
       setIsRecording(true);
     } catch (err) {
       console.warn("Screen recording notice:", err);
-      // Don't pop alert if user simply pressed 'Cancel' on the prompt
       if (err.name !== "NotAllowedError") {
-        setErrorMsg("Recording could not start: " + (err.message || "Permission required"));
+        setErrorMsg("Recording cancelled. In Chrome's popup, click the 'Chrome Tab' tab and select 'ShikshakAI'!");
       }
     }
   };
@@ -128,12 +158,12 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
   };
 
   const handleExportNotes = () => {
-    const textContent = `# ShikshakAI - Lesson Notes: ${lessonTitle}\nDate: ${new Date().toLocaleDateString()}\n\nTeacher Script Transcript:\n${currentStepScript || "Educational session completed."}\n`;
+    const textContent = `# ShikshakAI - Interactive Lesson Notes: ${lessonTitle}\nGenerated: ${new Date().toLocaleString()}\n\n## Lecture Transcript:\n${currentStepScript || "Classroom lecture completed."}\n\n---\n*Recorded via ShikshakAI Studio*`;
     const blob = new Blob([textContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ShikshakAI_${lessonTitle.replace(/[^a-zA-Z0-9_-]/g, "_")}_Notes.md`;
+    a.download = `ShikshakAI_${(lessonTitle || "Lesson").replace(/[^a-zA-Z0-9_-]/g, "_")}_Notes.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -148,7 +178,7 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
               type="button"
               className="record-btn start"
               onClick={startRecording}
-              title="Record Video Lesson with AI Avatar and Smartboard"
+              title="Record lesson video (Click 'This Tab' in prompt)"
             >
               <Video size={14} />
               <span>Record Lesson</span>
@@ -191,7 +221,7 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
             <div className="recorder-modal-header">
               <div className="rec-badge-group">
                 <CheckCircle2 size={18} className="text-emerald-400" />
-                <h4>Lesson Video Captured!</h4>
+                <h4>Lesson Video Ready</h4>
               </div>
               <button
                 type="button"
@@ -230,7 +260,7 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
                   onClick={handleDownloadVideo}
                 >
                   <Download size={14} />
-                  <span>Download Video (.webm)</span>
+                  <span>Download Video</span>
                 </button>
               </div>
             </div>
