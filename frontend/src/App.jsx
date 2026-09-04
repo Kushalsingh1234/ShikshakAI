@@ -5,6 +5,7 @@ import LearningReportModal from "./components/LearningReportModal";
 import LessonRecorder from "./components/LessonRecorder";
 import StudyNotesModal from "./components/StudyNotesModal";
 import Landing from "./pages/Landing";
+import WelcomeTransition from "./components/welcome/WelcomeTransition";
 import AppShell from "./components/home/AppShell";
 import HomeWorkspace from "./components/home/HomeWorkspace";
 import { TEACHERS, DEFAULT_TEACHER } from "./constants/teachers";
@@ -183,7 +184,17 @@ export default function App() {
 
   // Landing Page view option
   if (view === "landing") {
-    return <Landing onStart={() => navigateTo("home")} />;
+    return <Landing onStart={() => navigateTo("welcome")} />;
+  }
+
+  // Premium Welcome Transition Animation
+  if (view === "welcome") {
+    return (
+      <WelcomeTransition
+        studentName="Aarav"
+        onComplete={() => navigateTo("home")}
+      />
+    );
   }
 
   // Active Lesson Classroom View
