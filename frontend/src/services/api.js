@@ -31,10 +31,11 @@ export async function fetchLessonPlan({ topic, learner_level, target_duration_mi
   return await res.json();
 }
 
-export async function generateTTS(text, language = "en") {
+export async function generateTTS(text, language = "en", teacherId = "dr-maya") {
   const formData = new FormData();
   formData.append("text", text);
   formData.append("language", language);
+  formData.append("teacher_id", teacherId);
   const res = await fetch(`${BACKEND_URL}/api/tts/speak`, {
     method: "POST",
     body: formData,

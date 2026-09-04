@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Sparkles, ChevronDown, UserCheck } from "lucide-react";
+import { Sparkles, ChevronDown, UserCheck, RotateCcw, FastForward } from "lucide-react";
 import { TEACHERS } from "../constants/teachers";
 
 export default function TeacherAvatar({
@@ -11,29 +11,111 @@ export default function TeacherAvatar({
   onSelectTeacher,
 }) {
   const audioRef = useRef(null);
-  const [mouthOpen, setMouthOpen] = useState(false);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const sourceRef = useRef(null);
+  const animationFrameRef = useRef(null);
+
+  const [mouthOpenAmount, setMouthOpenAmount] = useState(0); // 0 (closed) to 1.0 (open)
+  const [equalizerBars, setEqualizerBars] = useState([6, 12, 16, 8]);
   const [blink, setBlink] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Sync audio playback
+  // Setup Web Audio API Analyzer for real-time acoustic lip synchronization
+  const initAudioAnalyser = () => {
+    if (!audioRef.current || audioContextRef.current) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.7;
+
+      const source = ctx.createMediaElementSource(audioRef.current);
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+      sourceRef.current = source;
+    } catch (e) {
+      console.log("AudioContext initialized or handled via direct audio:", e);
+    }
+  };
+
+  // Sync audio playback and apply playback speed
   useEffect(() => {
     if (audioUrl && audioRef.current) {
       audioRef.current.src = audioUrl;
-      audioRef.current.play().catch((e) => console.log("Audio autoplay prevented:", e));
+      audioRef.current.playbackRate = playbackSpeed;
+      audioRef.current
+        .play()
+        .then(() => {
+          initAudioAnalyser();
+          if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+            audioContextRef.current.resume();
+          }
+        })
+        .catch((e) => console.log("Audio autoplay prevented:", e));
     }
-  }, [audioUrl]);
+  }, [audioUrl, playbackSpeed]);
 
-  // Lip-sync simulation during audio playback
+  // Real-time audio frequency and mouth opening loop
   useEffect(() => {
-    let interval;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setMouthOpen((prev) => !prev);
-      }, 130);
-    } else {
-      setMouthOpen(false);
+    if (!isPlaying) {
+      setMouthOpenAmount(0);
+      setEqualizerBars([4, 4, 4, 4]);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      return;
     }
-    return () => clearInterval(interval);
+
+    const updateAcousticLipSync = () => {
+      if (analyserRef.current) {
+        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        // Calculate average speech volume
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / dataArray.length; // 0 to 255
+        const normalized = Math.min(1, avg / 75);
+
+        // Only open mouth if volume is above noise threshold
+        setMouthOpenAmount(normalized > 0.08 ? normalized : 0);
+
+        // Derive dynamic frequency wave bar heights (4px to 24px)
+        const b1 = Math.max(4, Math.min(24, dataArray[1] / 9));
+        const b2 = Math.max(4, Math.min(24, dataArray[4] / 8));
+        const b3 = Math.max(4, Math.min(24, dataArray[8] / 8));
+        const b4 = Math.max(4, Math.min(24, dataArray[12] / 9));
+        setEqualizerBars([b1, b2, b3, b4]);
+      } else {
+        // High-fidelity rhythmic fallback if browser restricts WebAudio
+        const t = Date.now() / 140;
+        const fallbackOpen = Math.sin(t) > 0.15 ? 0.75 : 0;
+        setMouthOpenAmount(fallbackOpen);
+        setEqualizerBars([
+          8 + Math.sin(t * 2) * 6,
+          16 + Math.cos(t * 2.5) * 7,
+          14 + Math.sin(t * 3) * 8,
+          6 + Math.cos(t * 1.5) * 4,
+        ]);
+      }
+
+      animationFrameRef.current = requestAnimationFrame(updateAcousticLipSync);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(updateAcousticLipSync);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [isPlaying]);
 
   // Natural blinking effect
@@ -44,6 +126,23 @@ export default function TeacherAvatar({
     }, 3800);
     return () => clearInterval(blinkInterval);
   }, []);
+
+  const togglePlaybackSpeed = () => {
+    const speeds = [1, 1.25, 1.5];
+    const nextIdx = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
+    const nextSpeed = speeds[nextIdx];
+    setPlaybackSpeed(nextSpeed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextSpeed;
+    }
+  };
+
+  const replayCurrentSpeech = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((e) => console.log(e));
+    }
+  };
 
   const activeTeacher = currentTeacher || TEACHERS[0];
 
@@ -115,9 +214,17 @@ export default function TeacherAvatar({
           {/* Nose */}
           <path d="M 198 186 L 195 202 L 205 202" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
 
-          {/* Animated Mouth */}
-          {mouthOpen ? (
-            <ellipse cx="200" cy="226" rx="14" ry="9" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" />
+          {/* Real-time Dynamic Lip-Sync Mouth */}
+          {mouthOpenAmount > 0.05 ? (
+            <ellipse
+              cx="200"
+              cy="226"
+              rx={11 + mouthOpenAmount * 5}
+              ry={3.5 + mouthOpenAmount * 8.5}
+              fill="#991b1b"
+              stroke="#7f1d1d"
+              strokeWidth="1.5"
+            />
           ) : (
             <path d="M 188 226 Q 200 234 212 226" fill="none" stroke="#b91c1c" strokeWidth="3" strokeLinecap="round" />
           )}
@@ -207,9 +314,17 @@ export default function TeacherAvatar({
           <path d="M 198 184 L 195 200 L 204 200" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
           <circle cx="207" cy="198" r="1.8" fill="#fbbf24" />
 
-          {/* Animated Warm Smile / Mouth */}
-          {mouthOpen ? (
-            <ellipse cx="200" cy="224" rx="13" ry="8" fill="#991b1b" stroke="#831843" strokeWidth="1.5" />
+          {/* Real-time Dynamic Lip-Sync Mouth */}
+          {mouthOpenAmount > 0.05 ? (
+            <ellipse
+              cx="200"
+              cy="224"
+              rx={11 + mouthOpenAmount * 5}
+              ry={3.5 + mouthOpenAmount * 8}
+              fill="#991b1b"
+              stroke="#831843"
+              strokeWidth="1.5"
+            />
           ) : (
             <path d="M 188 223 Q 200 231 212 223" fill="none" stroke="#be123c" strokeWidth="3" strokeLinecap="round" />
           )}
@@ -291,9 +406,17 @@ export default function TeacherAvatar({
         {/* Nose */}
         <path d="M 197 185 L 195 202 L 205 202" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
 
-        {/* Animated Mouth (Lip-sync to Speech) */}
-        {mouthOpen ? (
-          <ellipse cx="200" cy="225" rx="14" ry="9" fill="#991b1b" stroke="#7f1d1d" strokeWidth="1.5" />
+        {/* Real-time Dynamic Lip-Sync Mouth */}
+        {mouthOpenAmount > 0.05 ? (
+          <ellipse
+            cx="200"
+            cy="225"
+            rx={11 + mouthOpenAmount * 5}
+            ry={3.5 + mouthOpenAmount * 8.5}
+            fill="#991b1b"
+            stroke="#7f1d1d"
+            strokeWidth="1.5"
+          />
         ) : (
           <path d="M 188 225 Q 200 231 212 225" fill="none" stroke="#b91c1c" strokeWidth="3" strokeLinecap="round" />
         )}
@@ -361,26 +484,49 @@ export default function TeacherAvatar({
       <div className="avatar-viewport">
         {renderAvatarContent()}
 
-        {/* Floating Speech Status Overlay */}
+        {/* Acoustic Speech Frequency Visualizer Bar */}
         <div className="speech-status-bar">
           <div className="wave-bars">
-            <span className={`bar ${isPlaying ? "active" : ""}`}></span>
-            <span className={`bar ${isPlaying ? "active" : ""}`}></span>
-            <span className={`bar ${isPlaying ? "active" : ""}`}></span>
-            <span className={`bar ${isPlaying ? "active" : ""}`}></span>
+            {equalizerBars.map((height, i) => (
+              <span
+                key={i}
+                className={`bar ${isPlaying ? "active" : ""}`}
+                style={{ height: `${height}px`, transition: "height 0.08s ease" }}
+              />
+            ))}
           </div>
           <span className="speech-caption-text">
-            {isPlaying ? `${activeTeacher.name} is explaining...` : `Ready to assist • ${activeTeacher.tone}`}
+            {isPlaying ? `${activeTeacher.name} is speaking...` : `Ready to teach • ${activeTeacher.tone}`}
           </span>
         </div>
       </div>
 
-      {/* Subtitles & Spoken Transcript */}
+      {/* Subtitles, Transcript & Quick Voice Controls */}
       <div className="teacher-speech-box">
         <p className="speech-transcript">"{scriptText || activeTeacher.greeting}"</p>
+        <div className="voice-controls-bar">
+          <button
+            type="button"
+            className="voice-ctrl-chip"
+            onClick={togglePlaybackSpeed}
+            title="Adjust voice playback speed"
+          >
+            <FastForward size={12} />
+            <span>{playbackSpeed}x Speed</span>
+          </button>
+          <button
+            type="button"
+            className="voice-ctrl-chip"
+            onClick={replayCurrentSpeech}
+            title="Replay current teacher explanation"
+          >
+            <RotateCcw size={12} />
+            <span>Replay</span>
+          </button>
+        </div>
       </div>
 
-      <audio ref={audioRef} onEnded={onAudioEnded} style={{ display: "none" }} />
+      <audio ref={audioRef} onEnded={onAudioEnded} crossOrigin="anonymous" style={{ display: "none" }} />
     </div>
   );
 }

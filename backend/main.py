@@ -105,9 +105,13 @@ async def create_lesson_plan(request: LessonRequest):
     return plan
 
 @app.post("/api/tts/speak")
-async def text_to_speech(text: str = Form(...), language: str = Form("en")):
-    """Generates lifelike AI teacher voice audio using free Edge-TTS."""
-    audio_url = await generate_speech(text=text, language=language)
+async def text_to_speech(
+    text: str = Form(...),
+    language: str = Form("en"),
+    teacher_id: str = Form("dr-maya")
+):
+    """Generates lifelike AI teacher voice audio using free Edge-TTS matching teacher persona."""
+    audio_url = await generate_speech(text=text, language=language, teacher_id=teacher_id)
     return {"audio_url": audio_url}
 
 @app.post("/api/evaluate")

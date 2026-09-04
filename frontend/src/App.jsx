@@ -16,6 +16,7 @@ import {
   BarChart2,
   Award,
   Layers,
+  Film,
 } from "lucide-react";
 import "./App.css";
 
@@ -31,6 +32,8 @@ export default function App() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [studentScore, setStudentScore] = useState({ correct: 0, total: 0 });
   const [evalHistory, setEvalHistory] = useState([]);
+  const [autoPlayVideoMode, setAutoPlayVideoMode] = useState(true);
+  const autoAdvanceTimeoutRef = useRef(null);
 
   // Initial backend health check
   useEffect(() => {
@@ -67,9 +70,12 @@ export default function App() {
   // Play audio for a specific lesson step
   const playStep = async (step, language = "en") => {
     if (!step) return;
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+    }
     setIsPlayingAudio(true);
     try {
-      const audioUrl = await generateTTS(step.teacher_script, language);
+      const audioUrl = await generateTTS(step.teacher_script, language, selectedTeacher?.id);
       setCurrentAudioUrl(audioUrl);
     } catch (err) {
       console.warn("TTS fallback (browser synthesis):", err);
@@ -92,10 +98,22 @@ export default function App() {
     const activeStep = step || lessonPlan?.steps[currentStepIndex];
     if (activeStep?.step_type === "checkpoint") {
       setShowInteraction(true);
+    } else if (autoPlayVideoMode && lessonPlan) {
+      if (currentStepIndex < lessonPlan.steps.length - 1) {
+        // Natural educator breathing transition (1.2s) before auto-advancing to next video slide
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          handleNextStep();
+        }, 1200);
+      } else {
+        setShowReportModal(true);
+      }
     }
   };
 
   const handleNextStep = () => {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+    }
     setShowInteraction(false);
     if (!lessonPlan) return;
     if (currentStepIndex < lessonPlan.steps.length - 1) {
@@ -109,6 +127,9 @@ export default function App() {
   };
 
   const handlePrevStep = () => {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+    }
     setShowInteraction(false);
     if (!lessonPlan || currentStepIndex === 0) return;
     const prevIdx = currentStepIndex - 1;
@@ -226,6 +247,16 @@ export default function App() {
               >
                 <span>{currentStepIndex === lessonPlan.steps.length - 1 ? "Finish Lesson" : "Next"}</span>
                 <ChevronRight size={18} />
+              </button>
+
+              <button
+                type="button"
+                className={`video-mode-chip ${autoPlayVideoMode ? "active" : ""}`}
+                onClick={() => setAutoPlayVideoMode((prev) => !prev)}
+                title="Toggle Continuous Video Lecture Mode"
+              >
+                <Film size={14} />
+                <span>{autoPlayVideoMode ? "Auto-Play ON" : "Manual"}</span>
               </button>
             </div>
           )}

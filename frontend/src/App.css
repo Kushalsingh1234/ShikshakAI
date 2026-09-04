@@ -2361,3 +2361,58 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
 }
+
+/* Phase 3: Voice Controls & Video Mode Styling */
+.voice-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.voice-ctrl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.voice-ctrl-chip:hover {
+  color: var(--text-main);
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.video-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.video-mode-chip.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.video-mode-chip:hover {
+  color: #fff;
+  border-color: var(--primary);
+}
+

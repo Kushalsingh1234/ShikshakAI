@@ -2,20 +2,39 @@ import edge_tts
 import asyncio
 import base64
 
-VOICE_MAPPINGS = {
-    "en": "en-IN-NeerjaNeural",         # Natural Indian English
-    "en-US": "en-US-ChristopherNeural", # American English
-    "hi": "hi-IN-SwaraNeural",          # Hindi Neural
-    "hinglish": "hi-IN-MadhurNeural",   # Hinglish / Indian Accent
+# Personas and specific neural voices
+TEACHER_VOICE_MAPPINGS = {
+    "dr-maya": {
+        "en": "en-IN-NeerjaNeural",         # Warm, analytical Indian English female
+        "en-US": "en-US-JennyNeural",
+        "hi": "hi-IN-SwaraNeural",          # Fluent Hindi female
+        "hinglish": "hi-IN-SwaraNeural",
+    },
+    "prof-alex": {
+        "en": "en-IN-PrabhatNeural",        # Practical Tech Indian English male
+        "en-US": "en-US-ChristopherNeural", # American Tech male
+        "hi": "hi-IN-MadhurNeural",         # Fluent Hindi male
+        "hinglish": "hi-IN-MadhurNeural",
+    },
+    "ananya": {
+        "en": "en-IN-NeerjaNeural",
+        "en-US": "en-US-JennyNeural",
+        "hi": "hi-IN-KavyaNeural",          # Expressive, gentle Hindi female
+        "hinglish": "hi-IN-KavyaNeural",
+    },
 }
 
-async def generate_speech(text: str, language: str = "en") -> str:
+DEFAULT_VOICE = "en-IN-NeerjaNeural"
+
+async def generate_speech(text: str, language: str = "en", teacher_id: str = "dr-maya") -> str:
     """
     Generates high-quality neural voice audio using Microsoft Edge TTS in-memory.
-    Returns a data URI string (data:audio/mp3;base64,...) that plays directly in browsers
-    and works 100% reliably in serverless environments like Vercel and AWS.
+    Selects voice tailored to teacher persona and language.
+    Returns a base64 data URI string (data:audio/mp3;base64,...) for serverless & cloud readiness.
     """
-    voice = VOICE_MAPPINGS.get(language.lower(), "en-IN-NeerjaNeural")
+    teacher_voices = TEACHER_VOICE_MAPPINGS.get(teacher_id.lower(), TEACHER_VOICE_MAPPINGS["dr-maya"])
+    voice = teacher_voices.get(language.lower(), teacher_voices.get("en", DEFAULT_VOICE))
+    
     communicate = edge_tts.Communicate(text, voice)
     
     audio_bytes = bytearray()
