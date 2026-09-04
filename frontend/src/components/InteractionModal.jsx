@@ -36,6 +36,11 @@ export default function InteractionModal({ step, language = "en", onAnswerEvalua
     recognition.start();
   };
 
+  const questionText = step.question || step.interaction?.question || "Checkpoint Question";
+  const optionsList = step.options || step.interaction?.options || null;
+  const correctAnswer = step.correct_answer || step.interaction?.correct_answer || "";
+  const misconceptionGuide = step.misconception_guide || step.interaction?.misconception_guide || "";
+
   const handleSubmit = async (answer) => {
     const finalAnswer = answer || selectedOption || typedAnswer;
     if (!finalAnswer) return;
@@ -43,10 +48,10 @@ export default function InteractionModal({ step, language = "en", onAnswerEvalua
     setIsSubmitting(true);
     try {
       const result = await evaluateAnswer({
-        question: step.question || "",
+        question: questionText,
         student_answer: finalAnswer,
-        correct_answer: step.correct_answer || "",
-        misconception_guide: step.misconception_guide,
+        correct_answer: correctAnswer,
+        misconception_guide: misconceptionGuide,
         language,
       });
       setEvalResult(result);
@@ -71,12 +76,12 @@ export default function InteractionModal({ step, language = "en", onAnswerEvalua
           <span className="checkpoint-note">Check your intuition</span>
         </div>
 
-        <h3 className="question-title">{step.question}</h3>
+        <h3 className="question-title">{questionText}</h3>
 
         {/* Options List if provided */}
-        {step.options && (
+        {optionsList && (
           <div className="options-grid">
-            {step.options.map((opt, idx) => (
+            {optionsList.map((opt, idx) => (
               <button
                 key={idx}
                 className={`option-card ${selectedOption === opt ? "selected" : ""}`}

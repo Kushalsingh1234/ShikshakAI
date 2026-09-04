@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Video, Square, Download, Sparkles, CheckCircle2, Play, AlertCircle, FileDown, ScreenShare } from "lucide-react";
 
-export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepScript = "" }) {
+export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepScript = "", onOpenNotes }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlobUrl, setRecordedBlobUrl] = useState(null);
   const [recordTimeSeconds, setRecordTimeSeconds] = useState(0);
@@ -186,8 +186,8 @@ export default function LessonRecorder({ lessonTitle = "AI_Lesson", currentStepS
             <button
               type="button"
               className="export-notes-pill"
-              onClick={handleExportNotes}
-              title="Export Lesson Notes as Markdown"
+              onClick={onOpenNotes ? onOpenNotes : handleExportNotes}
+              title="Open and Download Complete Lesson Study Notes"
             >
               <FileDown size={13} />
               <span>Notes</span>

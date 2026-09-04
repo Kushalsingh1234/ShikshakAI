@@ -1,4 +1,4 @@
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000");
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export async function checkBackendHealth() {
   try {
@@ -8,6 +8,26 @@ export async function checkBackendHealth() {
     console.warn("Backend not yet connected:", err);
     return null;
   }
+}
+
+export async function fetchAIConfig() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/config`);
+    return await res.json();
+  } catch (err) {
+    console.warn("Could not fetch AI config:", err);
+    return null;
+  }
+}
+
+export async function saveAIKey(keys) {
+  const res = await fetch(`${BACKEND_URL}/api/config/key`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(keys),
+  });
+  if (!res.ok) throw new Error("Failed to save API key");
+  return await res.json();
 }
 
 export async function uploadDocument(file) {
@@ -42,7 +62,7 @@ export async function generateTTS(text, language = "en", teacherId = "dr-maya") 
   });
   if (!res.ok) throw new Error("Failed to generate speech");
   const data = await res.json();
-  if (data.audio_url.startsWith("data:")) {
+  if (data.audio_url.startsWith("data:") || data.audio_url.startsWith("http")) {
     return data.audio_url;
   }
   return `${BACKEND_URL}${data.audio_url}`;
@@ -57,3 +77,4 @@ export async function evaluateAnswer({ question, student_answer, correct_answer,
   if (!res.ok) throw new Error("Evaluation request failed");
   return await res.json();
 }
+

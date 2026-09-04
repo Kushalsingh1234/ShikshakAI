@@ -9,6 +9,7 @@ export default function TeacherAvatar({
   onAudioEnded,
   currentTeacher = TEACHERS[0],
   onSelectTeacher,
+  footer,
 }) {
   const audioRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -493,6 +494,8 @@ export default function TeacherAvatar({
           </button>
         </div>
       </div>
+
+      {footer && <div className="studio-footer-nav">{footer}</div>}
 
       <audio ref={audioRef} onEnded={onAudioEnded} crossOrigin="anonymous" style={{ display: "none" }} />
     </div>

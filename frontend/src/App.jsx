@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import TeacherAvatar from "./components/TeacherAvatar";
 import SmartBoard from "./components/SmartBoard";
-import LessonControl from "./components/LessonControl";
-import InteractionModal from "./components/InteractionModal";
 import LearningReportModal from "./components/LearningReportModal";
 import LessonRecorder from "./components/LessonRecorder";
+import StudyNotesModal from "./components/StudyNotesModal";
 import Landing from "./pages/Landing";
+import AppShell from "./components/home/AppShell";
+import HomeWorkspace from "./components/home/HomeWorkspace";
 import { TEACHERS, DEFAULT_TEACHER } from "./constants/teachers";
 import { checkBackendHealth, fetchLessonPlan, generateTTS } from "./services/api";
 import {
@@ -18,13 +19,22 @@ import {
   Award,
   Layers,
   Film,
+  ArrowLeft,
+  FileText,
 } from "lucide-react";
 import "./App.css";
 
 export default function App() {
-  const [view, setView] = useState("landing"); // "landing" | "classroom"
+  const [view, setView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "home") {
+      return "home";
+    }
+    return "landing";
+  });
   const [backendStatus, setBackendStatus] = useState("checking");
   const [selectedTeacher, setSelectedTeacher] = useState(DEFAULT_TEACHER);
+  const [topic, setTopic] = useState("");
   const [lessonPlan, setLessonPlan] = useState(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentAudioUrl, setCurrentAudioUrl] = useState(null);
@@ -32,10 +42,32 @@ export default function App() {
   const [isLoadingLesson, setIsLoadingLesson] = useState(false);
   const [showInteraction, setShowInteraction] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
   const [studentScore, setStudentScore] = useState({ correct: 0, total: 0 });
   const [evalHistory, setEvalHistory] = useState([]);
   const [autoPlayVideoMode, setAutoPlayVideoMode] = useState(true);
   const autoAdvanceTimeoutRef = useRef(null);
+
+  // Sync view with URL param ?view=home or landing
+  const navigateTo = (newView) => {
+    setView(newView);
+    const url = new URL(window.location);
+    if (newView === "home") {
+      url.searchParams.set("view", "home");
+    } else {
+      url.searchParams.delete("view");
+    }
+    window.history.pushState({}, "", url);
+  };
+
+  useEffect(() => {
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search);
+      setView(params.get("view") === "home" ? "home" : "landing");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // Initial backend health check
   useEffect(() => {
@@ -149,266 +181,390 @@ export default function App() {
 
   const currentStep = lessonPlan?.steps[currentStepIndex];
 
-  // All hooks above this line; the landing page is a separate surface.
+  // Landing Page view option
   if (view === "landing") {
-    return <Landing onStart={() => setView("classroom")} />;
+    return <Landing onStart={() => navigateTo("home")} />;
   }
 
-  return (
-    <div className="app-container">
-      {/* Top Navigation Bar */}
-      <header className="classroom-nav">
-        <button
-          type="button"
-          className="brand-group brand-home"
-          onClick={() => setView("landing")}
-          title="Back to the ShikshakAI home page"
-        >
-          <div className="brand-icon">
-            <GraduationCap size={24} />
+  // Active Lesson Classroom View
+  if (lessonPlan) {
+    return (
+      <AppShell
+        activeNav="lessons"
+        onSelectNav={(tab) => {
+          if (tab === "home") {
+            setLessonPlan(null);
+            setCurrentAudioUrl(null);
+          }
+        }}
+        backendStatus={backendStatus}
+        studentScore={studentScore}
+        onOpenReport={() => setShowReportModal(true)}
+        onGoLanding={() => navigateTo("landing")}
+      >
+        <div className="active-classroom-wrapper">
+          {/* Top Classroom Action Bar */}
+          <div className="active-classroom-topbar">
+            <div className="classroom-topbar-left">
+              <button
+                type="button"
+                className="exit-to-setup-btn"
+                onClick={() => {
+                  setLessonPlan(null);
+                  setCurrentAudioUrl(null);
+                }}
+                title="Return to Lesson Configuration"
+              >
+                <ArrowLeft size={16} />
+                <span>Exit Studio</span>
+              </button>
+
+              <div className="classroom-live-meta">
+                <span className="live-meta-pill status">
+                  <span className="live-status-dot"></span> LIVE CLASSROOM
+                </span>
+                <span className="live-meta-pill topic">{lessonPlan.topic}</span>
+                <span className="live-meta-pill teacher">{selectedTeacher.name}</span>
+                <span className="live-meta-pill level">{lessonPlan.learner_level}</span>
+                <span className="live-meta-pill progress">
+                  Step {currentStepIndex + 1} of {lessonPlan.steps.length}
+                </span>
+              </div>
+            </div>
+
+            <div className="classroom-top-actions">
+              <LessonRecorder
+                lessonTitle={lessonPlan?.topic || "Virtual_Classroom"}
+                onOpenNotes={() => setShowNotesModal(true)}
+              />
+              <button
+                type="button"
+                className="notes-topbar-btn"
+                onClick={() => setShowNotesModal(true)}
+                title="View & Download Structured Study Notes"
+              >
+                <FileText size={15} />
+                <span>Notes</span>
+              </button>
+              <button
+                type="button"
+                className="report-open-btn"
+                onClick={() => setShowReportModal(true)}
+                title="View Student Learning Analytics"
+              >
+                <Award size={15} />
+                <span>Learning Report</span>
+              </button>
+            </div>
           </div>
-          <div className="brand-text">
-            <h2>ShikshakAI</h2>
-            <span className="subtitle">The Adaptive Video Educator • Hackathon 2026</span>
-          </div>
-        </button>
 
-        <div className="nav-actions">
-          {/* Backend Status Pill */}
-          <div className={`status-pill ${backendStatus}`}>
-            <span className="dot"></span>
-            <span>{backendStatus === "online" ? "AI Engine Online" : "AI Engine Ready"}</span>
-          </div>
+          {/* Main Dual-Pane Classroom Stage */}
+          <main className="stage-grid">
+            {/* Left Stage: AI Avatar Teacher & Controls */}
+            <section className="left-stage">
+              <TeacherAvatar
+                scriptText={
+                  currentStep
+                    ? currentStep.teacher_script
+                    : `${selectedTeacher.greeting} Let's continue our lesson!`
+                }
+                audioUrl={currentAudioUrl}
+                isPlaying={isPlayingAudio}
+                onAudioEnded={() => handleAudioEnded(currentStep)}
+                currentTeacher={selectedTeacher}
+                onSelectTeacher={setSelectedTeacher}
+                footer={
+                  <div className="lesson-nav-bar">
+                    <button
+                      type="button"
+                      className="nav-btn"
+                      onClick={handlePrevStep}
+                      disabled={currentStepIndex === 0}
+                    >
+                      <ChevronLeft size={16} />
+                      <span>Prev</span>
+                    </button>
 
-          {/* Lesson Video Recording Button */}
-          <LessonRecorder lessonTitle={lessonPlan?.topic || "Virtual_Classroom"} />
+                    <div className="step-dots">
+                      {lessonPlan.steps.map((s, idx) => (
+                        <button
+                          type="button"
+                          key={s.id || idx}
+                          className={`dot ${
+                            idx === currentStepIndex
+                              ? "active"
+                              : idx < currentStepIndex
+                              ? "completed"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setCurrentStepIndex(idx);
+                            playStep(lessonPlan.steps[idx], lessonPlan.language);
+                          }}
+                          title={`Step ${idx + 1}: ${s.step_type}`}
+                        />
+                      ))}
+                    </div>
 
-          {/* Live Score Pill */}
-          <div className="score-pill">
-            <BarChart2 size={16} />
-            <span>Score: {studentScore.correct}/{studentScore.total}</span>
-          </div>
+                    <button
+                      type="button"
+                      className="nav-btn next-primary"
+                      onClick={handleNextStep}
+                    >
+                      <span>{currentStepIndex === lessonPlan.steps.length - 1 ? "Finish" : "Next"}</span>
+                      <ChevronRight size={16} />
+                    </button>
 
-          {/* Learning Report Modal Opener */}
-          <button
-            type="button"
-            className="open-report-pill-btn"
-            onClick={() => setShowReportModal(true)}
-            title="View Student Learning Analytics"
-          >
-            <Award size={15} />
-            <span>Learning Report</span>
-          </button>
-        </div>
-      </header>
+                    <button
+                      type="button"
+                      className={`video-mode-chip ${autoPlayVideoMode ? "active" : ""}`}
+                      onClick={() => setAutoPlayVideoMode((prev) => !prev)}
+                      title="Toggle Continuous Video Lecture Mode"
+                    >
+                      <Film size={13} />
+                      <span>{autoPlayVideoMode ? "Auto" : "Manual"}</span>
+                    </button>
+                  </div>
+                }
+              />
+            </section>
 
-      {/* Main Dual-Pane Classroom Stage */}
-      <main className="stage-grid">
-        {/* Left Pane: Human-like AI Avatar Teacher */}
-        <section className="left-stage">
-          <TeacherAvatar
-            scriptText={
-              currentStep
-                ? currentStep.teacher_script
-                : `${selectedTeacher.greeting} Select a topic or upload your material on the right to start our lesson!`
-            }
-            audioUrl={currentAudioUrl}
-            isPlaying={isPlayingAudio}
-            onAudioEnded={() => handleAudioEnded(currentStep)}
-            currentTeacher={selectedTeacher}
-            onSelectTeacher={setSelectedTeacher}
+            {/* Right Stage: Interactive Smartboard & Checkpoint Arena */}
+            <section className="right-stage">
+              <div className="active-lesson-view">
+                <SmartBoard
+                  visual={currentStep?.visual}
+                  step={currentStep}
+                  lessonTitle={lessonPlan.topic}
+                  currentStep={currentStepIndex + 1}
+                  totalSteps={lessonPlan.steps.length}
+                  language={lessonPlan.language || "en"}
+                  onAnswerEvaluated={handleAnswerEvaluated}
+                  onNextStep={handleNextStep}
+                  onOpenNotes={() => setShowNotesModal(true)}
+                />
+              </div>
+            </section>
+          </main>
+
+          {/* Complete Study Guide & Notes Modal */}
+          <StudyNotesModal
+            isOpen={showNotesModal}
+            onClose={() => setShowNotesModal(false)}
+            lessonPlan={lessonPlan}
+            teacherName={selectedTeacher?.name || "Dr. Maya"}
+            currentStepIndex={currentStepIndex}
           />
 
-          {lessonPlan && (
-            <div className="lesson-nav-bar">
-              <button
-                type="button"
-                className="nav-btn"
-                onClick={handlePrevStep}
-                disabled={currentStepIndex === 0}
-              >
-                <ChevronLeft size={18} />
-                <span>Previous</span>
-              </button>
+          {/* Learning Report Modal */}
+          <LearningReportModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            lessonTopic={lessonPlan?.topic || "Core Principles"}
+            teacherName={selectedTeacher?.name || "Dr. Maya"}
+            studentScore={studentScore}
+            learnerLevel={lessonPlan?.learner_level || "beginner"}
+            evalHistory={evalHistory}
+          />
+        </div>
+      </AppShell>
+    );
+  }
 
-              <div className="step-dots">
-                {lessonPlan.steps.map((s, idx) => (
-                  <button
-                    type="button"
-                    key={s.id || idx}
-                    className={`dot ${
-                      idx === currentStepIndex
-                        ? "active"
-                        : idx < currentStepIndex
-                        ? "completed"
-                        : ""
-                    }`}
-                    onClick={() => {
-                      setCurrentStepIndex(idx);
-                      playStep(lessonPlan.steps[idx], lessonPlan.language);
-                    }}
-                    title={`Step ${idx + 1}: ${s.step_type}`}
-                  />
-                ))}
-              </div>
+  // REDESIGNED HOME / LESSON SETUP PRODUCTION PAGE
+  return (
+    <AppShell
+      activeNav="home"
+      onSelectNav={(tab) => {
+        if (tab === "home") {
+          setLessonPlan(null);
+        }
+      }}
+      backendStatus={backendStatus}
+      studentScore={studentScore}
+      onOpenReport={() => setShowReportModal(true)}
+      onGoLanding={() => navigateTo("landing")}
+    >
+      <HomeWorkspace
+        onStartLesson={handleStartLesson}
+        isLoading={isLoadingLesson}
+        selectedTeacher={selectedTeacher}
+        onSelectTeacher={setSelectedTeacher}
+        topic={topic}
+        setTopic={setTopic}
+        backendStatus={backendStatus}
+      />
 
-              <button
-                type="button"
-                className="nav-btn"
-                onClick={handleNextStep}
-              >
-                <span>{currentStepIndex === lessonPlan.steps.length - 1 ? "Finish Lesson" : "Next"}</span>
-                <ChevronRight size={18} />
-              </button>
-
-              <button
-                type="button"
-                className={`video-mode-chip ${autoPlayVideoMode ? "active" : ""}`}
-                onClick={() => setAutoPlayVideoMode((prev) => !prev)}
-                title="Toggle Continuous Video Lecture Mode"
-              >
-                <Film size={14} />
-                <span>{autoPlayVideoMode ? "Auto-Play ON" : "Manual"}</span>
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* Right Pane: Smartboard & Pedagogical Controls */}
-        <section className="right-stage">
-          {!lessonPlan ? (
-            <LessonControl
-              onStartLesson={handleStartLesson}
-              isLoading={isLoadingLesson}
-              selectedTeacher={selectedTeacher}
-              onSelectTeacher={setSelectedTeacher}
-            />
-          ) : (
-            <div className="active-lesson-view">
-              <div className="lesson-top-bar">
-                <div className="lesson-meta">
-                  <span className="badge topic-badge">{lessonPlan.topic}</span>
-                  <span className="badge level-badge">{lessonPlan.learner_level}</span>
-                  <span className="badge time-badge">{lessonPlan.target_duration_minutes} mins</span>
-                  <span className="badge teacher-badge" style={{ borderColor: selectedTeacher.accentColor }}>
-                    {selectedTeacher.name}
-                  </span>
-                </div>
-
-                <div className="lesson-actions-group">
-                  <button
-                    type="button"
-                    className="report-shortcut-btn"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <Award size={14} />
-                    <span>Report & Roadmap</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="reset-btn"
-                    onClick={() => {
-                      setLessonPlan(null);
-                      setCurrentAudioUrl(null);
-                    }}
-                  >
-                    <RefreshCw size={14} />
-                    <span>New Lesson</span>
-                  </button>
-                </div>
-              </div>
-
-              <SmartBoard
-                visual={currentStep?.visual}
-                lessonTitle={lessonPlan.topic}
-                currentStep={currentStepIndex + 1}
-                totalSteps={lessonPlan.steps.length}
-              />
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Mid-lesson Checkpoint & Misconception Dialog */}
-      {showInteraction && currentStep?.step_type === "checkpoint" && (
-        <InteractionModal
-          step={currentStep}
-          language={lessonPlan?.language || "en"}
-          onAnswerEvaluated={handleAnswerEvaluated}
-          onNextStep={handleNextStep}
-        />
-      )}
-
-      {/* Post-Lesson Student Analytics & 7-Day Study Roadmap Report Modal */}
+      {/* Learning Analytics Modal accessible from top header */}
       <LearningReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
-        lessonTopic={lessonPlan?.topic || "Core Principles"}
+        lessonTopic={topic || "Core Principles"}
         teacherName={selectedTeacher?.name || "Dr. Maya"}
         studentScore={studentScore}
-        learnerLevel={lessonPlan?.learner_level || "beginner"}
+        learnerLevel="beginner"
         evalHistory={evalHistory}
       />
-    </div>
+    </AppShell>
   );
 }
 
-// Resilient fallback plan generator when testing standalone
-function generateFallbackLessonPlan(topic = "Ohm's Law", level = "beginner", lang = "en") {
+// Resilient topic-aware fallback plan generator when testing standalone
+function generateFallbackLessonPlan(topic = "Core Principles", level = "beginner", lang = "en") {
+  const cleanTopic = topic ? topic.trim() : "Core Principles";
+  const tLower = cleanTopic.toLowerCase();
+
+  // 1. Programming / OOP
+  if (/oop|class|object|inherit|python|java|program|code|function|encapsul/.test(tLower)) {
+    return {
+      topic: cleanTopic,
+      learner_level: level || "beginner",
+      language: lang || "en",
+      target_duration_minutes: 20,
+      steps: [
+        {
+          id: 1,
+          step_type: "intro",
+          teacher_script: `Welcome! Today we explore ${cleanTopic}. Object-Oriented Programming models real-world concepts into modular, reusable software entities.`,
+          visual: {
+            type: "mermaid",
+            title: `${cleanTopic} — Class Model`,
+            content: "classDiagram\n  class Blueprint {\n    +String attributes\n    +executeMethod()\n  }\n  class Instance {\n    +state = active\n  }\n  Blueprint <|-- Instance",
+          },
+        },
+        {
+          id: 2,
+          step_type: "demonstration",
+          teacher_script: "Think of a Class as an architectural blueprint, and an Object as the actual house created from that blueprint.",
+          visual: {
+            type: "code",
+            title: "Class Definition & Instantiation",
+            content: "# Class Blueprint\nclass Student:\n    def __init__(self, name: str):\n        self.name = name\n        self.__score = 0  # Encapsulated state\n\n    def add_score(self, points: int):\n        self.__score += points\n        return f'{self.name}: {self.__score}'\n\ns = Student('Aarav')\nprint(s.add_score(10))",
+          },
+        },
+        {
+          id: 3,
+          step_type: "checkpoint",
+          teacher_script: "Let us pause for a quick concept check on OOP foundations!",
+          question: "Which core OOP pillar allows a child class to inherit and extend methods and attributes from a parent class?",
+          options: ["Inheritance", "Encapsulation", "Polymorphism", "Abstraction"],
+          correct_answer: "Inheritance",
+          misconception_guide: "If you chose Encapsulation, note that Encapsulation hides state, whereas Inheritance provides hierarchical code reuse.",
+        },
+        {
+          id: 4,
+          step_type: "summary",
+          teacher_script: `Great job! You've mastered how ${cleanTopic} structures software through blueprints and reusable object instances.`,
+          visual: {
+            type: "bullet_points",
+            title: `${cleanTopic} — Core Takeaways`,
+            content: "• Classes define state (attributes) and behavior (methods).\n• Objects are independent runtime instances.\n• Inheritance eliminates duplicate logic across modules.",
+          },
+        },
+      ],
+    };
+  }
+
+  // 2. Physics / Circuits / Ohm's Law
+  if (/ohm|circuit|resistor|voltage|current|electric/.test(tLower)) {
+    return {
+      topic: cleanTopic,
+      learner_level: level || "beginner",
+      language: lang || "en",
+      target_duration_minutes: 20,
+      steps: [
+        {
+          id: 1,
+          step_type: "intro",
+          teacher_script: `Welcome to our session on ${cleanTopic}! Today we explore the relationship between voltage, current, and electrical resistance.`,
+          visual: {
+            type: "katex",
+            title: "Foundational Relation",
+            content: "V = I \\cdot R \\quad \\iff \\quad I = \\frac{V}{R}",
+          },
+        },
+        {
+          id: 2,
+          step_type: "demonstration",
+          teacher_script: "Current is directly proportional to voltage and inversely proportional to resistance. Doubling resistance cuts current in half.",
+          visual: {
+            type: "mermaid",
+            title: "Circuit Loop",
+            content: "graph LR\n  Battery[Voltage Source 12V] --> Switch((Closed Switch))\n  Switch --> Resistor[Resistor 6 Ohms]\n  Resistor --> Current((Current 2A))\n  Current --> Battery",
+          },
+        },
+        {
+          id: 3,
+          step_type: "checkpoint",
+          teacher_script: "Concept check: What happens to current if resistance increases while voltage remains constant?",
+          question: "If resistance in a circuit increases while voltage remains constant, what happens to current?",
+          options: ["Current increases", "Current decreases", "Current remains unchanged", "Current drops to zero immediately"],
+          correct_answer: "Current decreases",
+          misconception_guide: "Resistance opposes electron flow. When resistance increases, current must decrease.",
+        },
+        {
+          id: 4,
+          step_type: "summary",
+          teacher_script: "Awesome work! You understand the fundamental inverse relationship between resistance and current.",
+          visual: {
+            type: "bullet_points",
+            title: `${cleanTopic} — Summary`,
+            content: "• V = I * R governs linear electric circuits.\n• Voltage is the driving potential.\n• Current decreases when resistance increases.",
+          },
+        },
+      ],
+    };
+  }
+
+  // 3. Dynamic General Generator for Any Topic
   return {
-    topic: topic || "Ohm's Law & Circuit Principles",
+    topic: cleanTopic,
     learner_level: level || "beginner",
-    target_duration_minutes: 20,
     language: lang || "en",
+    target_duration_minutes: 20,
     steps: [
       {
-        id: "step-1",
+        id: 1,
         step_type: "intro",
-        teacher_script: `Welcome to our session on ${topic}! Today, we will explore the foundational relationship between voltage, current, and resistance with interactive visuals and hands-on demonstrations.`,
+        teacher_script: `Welcome! Today we will break down ${cleanTopic} systematically from first principles.`,
         visual: {
-          type: "katex",
-          title: "The Golden Equation of Circuits",
-          content: "V = I \\cdot R \\iff I = \\frac{V}{R} \\iff R = \\frac{V}{I}",
+          type: "mermaid",
+          title: `${cleanTopic} — Overview`,
+          content: `graph TD\n  Concept[${cleanTopic}] --> Mechanism[Core Mechanics]\n  Mechanism --> Application[Practical Outcomes]`,
         },
       },
       {
-        id: "step-2",
-        step_type: "concept",
-        teacher_script: `Let us examine how charge carriers drift through conductive materials. Resistance arises from the microscopic collisions of accelerating electrons with lattice ions.`,
-        visual: {
-          type: "formula_derivation",
-          title: "Microscopic Derivation of Ohm's Law",
-        },
-      },
-      {
-        id: "step-3",
-        step_type: "checkpoint",
-        teacher_script: `Here is a checkpoint question to test your intuition! If we double the voltage across a constant resistor, what happens to the electric current?`,
-        question: "If Voltage (V) is doubled across a constant resistor (R), what happens to the Current (I)?",
-        options: [
-          "Current doubles (2x)",
-          "Current is halved (1/2x)",
-          "Current remains unchanged",
-          "Current quadruples (4x)",
-        ],
-        correct_answer: "Current doubles (2x)",
-        misconception_guide: "Because V = I * R, current I is directly proportional to voltage V when R is constant.",
+        id: 2,
+        step_type: "demonstration",
+        teacher_script: `Let us examine how ${cleanTopic} works in practice through concrete relationships and workflows.`,
         visual: {
           type: "bullet_points",
-          title: "Key Insights to Consider",
-          content: "1. V = I * R (Linear proportionality)\n2. Constant resistance maintains constant slope\n3. Increasing electrical pressure accelerates more electrons per second",
+          title: `${cleanTopic} — Architecture & Flow`,
+          content: `• Input: Foundational inputs driving ${cleanTopic}\n• Processing: Core transformation rules\n• Output: Observable, verified results`,
         },
       },
       {
-        id: "step-4",
-        step_type: "simulation",
-        teacher_script: `Now let's switch to the code sandbox to verify our mathematical calculations programmatically! Check the execution output.`,
+        id: 3,
+        step_type: "checkpoint",
+        teacher_script: `Let's check your intuition about ${cleanTopic} with a quick checkpoint!`,
+        question: `What is the primary role or foundational characteristic of ${cleanTopic}?`,
+        options: [
+          `Providing structured, modular logic for ${cleanTopic}`,
+          "Executing arbitrary random operations without order",
+          "Terminating processes without producing any output",
+          "Resetting all underlying states to zero permanently",
+        ],
+        correct_answer: `Providing structured, modular logic for ${cleanTopic}`,
+        misconception_guide: `Focus on the constructive purpose of ${cleanTopic} in structuring systems predictably.`,
+      },
+      {
+        id: 4,
+        step_type: "summary",
+        teacher_script: `Superb! You now have a solid conceptual foundation for ${cleanTopic}.`,
         visual: {
-          type: "code",
-          title: "Circuit Calculation Sandbox",
-          language: "python",
-          content: `# Circuit Simulation: Ohm's Law\ndef simulate_circuit(voltage, resistance):\n    current = voltage / resistance\n    power = voltage * current\n    return current, power\n\nv = 24.0 # Volts\nr = 6.0  # Ohms\n\ni, p = simulate_circuit(v, r)\nprint(f"[+] Voltage    : {v:.1f} V")\nprint(f"[+] Resistance : {r:.1f} Ω")\nprint(f"[*] Current    : {i:.2f} A")\nprint(f"[*] Power Diss : {p:.2f} Watts")`,
+          type: "bullet_points",
+          title: `${cleanTopic} — Mastered Principles`,
+          content: `• Grasped core principles of ${cleanTopic}\n• Understood systematic inputs and outputs\n• Ready for applied problem solving`,
         },
       },
     ],

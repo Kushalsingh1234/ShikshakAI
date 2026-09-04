@@ -7,7 +7,7 @@ from typing import Optional, Dict
 
 from services.tts_service import generate_speech
 from services.lesson_service import LessonPlan
-from services.ai_brain import generate_pedagogical_lesson, evaluate_student_response
+from services.ai_brain import generate_pedagogical_lesson, evaluate_student_response, is_valid_key
 from services.rag_service import extract_document_content
 
 app = FastAPI(
@@ -46,6 +46,64 @@ class EvaluationRequest(BaseModel):
     misconception_guide: Optional[str] = None
     language: str = "en"
 
+class KeyConfigRequest(BaseModel):
+    gemini_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
+    openai_api_key: Optional[str] = None
+
+@app.get("/api/config")
+async def get_config():
+    gemini_valid = is_valid_key(os.getenv("GEMINI_API_KEY"))
+    groq_valid = is_valid_key(os.getenv("GROQ_API_KEY"))
+    openai_valid = is_valid_key(os.getenv("OPENAI_API_KEY"))
+    
+    if gemini_valid:
+        mode = "Google Gemini 2.0 Live"
+    elif groq_valid:
+        mode = "Groq Llama-3.3 Live"
+    elif openai_valid:
+        mode = "OpenAI Live"
+    else:
+        mode = "Adaptive Smart Engine (Zero-Key Active)"
+
+    return {
+        "gemini_configured": gemini_valid,
+        "groq_configured": groq_valid,
+        "openai_configured": openai_valid,
+        "active_ai_mode": mode,
+        "live_ai_connected": gemini_valid or groq_valid or openai_valid
+    }
+
+@app.post("/api/config/key")
+async def set_api_key(req: KeyConfigRequest):
+    env_path = ".env"
+    existing_vars = {}
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                if "=" in line and not line.strip().startswith("#"):
+                    k, v = line.strip().split("=", 1)
+                    existing_vars[k] = v
+
+    if req.gemini_api_key is not None:
+        clean_key = req.gemini_api_key.strip()
+        existing_vars["GEMINI_API_KEY"] = clean_key
+        os.environ["GEMINI_API_KEY"] = clean_key
+    if req.groq_api_key is not None:
+        clean_key = req.groq_api_key.strip()
+        existing_vars["GROQ_API_KEY"] = clean_key
+        os.environ["GROQ_API_KEY"] = clean_key
+    if req.openai_api_key is not None:
+        clean_key = req.openai_api_key.strip()
+        existing_vars["OPENAI_API_KEY"] = clean_key
+        os.environ["OPENAI_API_KEY"] = clean_key
+
+    with open(env_path, "w") as f:
+        for k, v in existing_vars.items():
+            f.write(f"{k}={v}\n")
+
+    return await get_config()
+
 @app.get("/api/health")
 async def health_check():
     return {
@@ -53,8 +111,9 @@ async def health_check():
         "service": "ShikshakAI Engine",
         "zero_cost_stack": {
             "tts": "Edge-TTS Neural (Free)",
-            "llm": "Google Gemini 3.6 Flash (Free Tier)",
-            "fallback_llm": "Groq (Free Tier)",
+            "llm": "Google Gemini 2.0 Flash (Free Tier)",
+            "fallback_llm": "Groq / OpenAI (Free Tier)",
+            "smart_engine": "Adaptive Pedagogical Synthesizer (Active)",
             "rag": "Multi-format Document Extraction (PDF, DOCX, PPTX)"
         }
     }
