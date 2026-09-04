@@ -2444,3 +2444,24 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   cursor: pointer;
 }
+
+/* Brand doubles as the way home to the landing page */
+.brand-home {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  border-radius: 12px;
+  transition: opacity 0.18s;
+}
+
+.brand-home:hover {
+  opacity: 0.82;
+}
+
+.brand-home:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}

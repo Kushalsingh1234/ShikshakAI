@@ -5,6 +5,7 @@ import LessonControl from "./components/LessonControl";
 import InteractionModal from "./components/InteractionModal";
 import LearningReportModal from "./components/LearningReportModal";
 import LessonRecorder from "./components/LessonRecorder";
+import Landing from "./pages/Landing";
 import { TEACHERS, DEFAULT_TEACHER } from "./constants/teachers";
 import { checkBackendHealth, fetchLessonPlan, generateTTS } from "./services/api";
 import {
@@ -21,6 +22,7 @@ import {
 import "./App.css";
 
 export default function App() {
+  const [view, setView] = useState("landing"); // "landing" | "classroom"
   const [backendStatus, setBackendStatus] = useState("checking");
   const [selectedTeacher, setSelectedTeacher] = useState(DEFAULT_TEACHER);
   const [lessonPlan, setLessonPlan] = useState(null);
@@ -147,11 +149,21 @@ export default function App() {
 
   const currentStep = lessonPlan?.steps[currentStepIndex];
 
+  // All hooks above this line; the landing page is a separate surface.
+  if (view === "landing") {
+    return <Landing onStart={() => setView("classroom")} />;
+  }
+
   return (
     <div className="app-container">
       {/* Top Navigation Bar */}
       <header className="classroom-nav">
-        <div className="brand-group">
+        <button
+          type="button"
+          className="brand-group brand-home"
+          onClick={() => setView("landing")}
+          title="Back to the ShikshakAI home page"
+        >
           <div className="brand-icon">
             <GraduationCap size={24} />
           </div>
@@ -159,7 +171,7 @@ export default function App() {
             <h2>ShikshakAI</h2>
             <span className="subtitle">The Adaptive Video Educator • Hackathon 2026</span>
           </div>
-        </div>
+        </button>
 
         <div className="nav-actions">
           {/* Backend Status Pill */}
