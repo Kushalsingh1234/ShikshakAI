@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Bot, GraduationCap, Cpu, CheckCircle2, ArrowRight } from "lucide-react";
+import { Bot, Sparkles, ArrowRight } from "lucide-react";
 import "./WelcomeTransition.css";
 
-const STAGES = [
-  { id: 1, label: "Booting adaptive AI tutor engines", icon: Cpu },
-  { id: 2, label: "Calibrating interactive SmartBoard studio", icon: GraduationCap },
-  { id: 3, label: "Personalized workspace ready", icon: Sparkles },
-];
-
-export default function WelcomeTransition({ onComplete, studentName = "Aarav" }) {
+export default function WelcomeTransition({ onComplete }) {
   const [progress, setProgress] = useState(0);
-  const [currentStageIdx, setCurrentStageIdx] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    const totalDuration = 2200; // 2.2s total smooth transition
-    const intervalTime = 25;
+    const totalDuration = 1800; // 1.8s quick, smooth transition
+    const intervalTime = 20;
     const stepIncrement = 100 / (totalDuration / intervalTime);
 
     const timer = setInterval(() => {
@@ -33,18 +26,10 @@ export default function WelcomeTransition({ onComplete, studentName = "Aarav" })
   }, []);
 
   useEffect(() => {
-    if (progress < 35) {
-      setCurrentStageIdx(0);
-    } else if (progress < 75) {
-      setCurrentStageIdx(1);
-    } else {
-      setCurrentStageIdx(2);
-    }
-
     if (progress >= 100) {
       const exitTimer = setTimeout(() => {
         triggerExit();
-      }, 350);
+      }, 250);
       return () => clearTimeout(exitTimer);
     }
   }, [progress]);
@@ -53,97 +38,60 @@ export default function WelcomeTransition({ onComplete, studentName = "Aarav" })
     setIsExiting(true);
     setTimeout(() => {
       onComplete && onComplete();
-    }, 450); // Matches CSS fade/scale exit animation
+    }, 400);
   };
 
   return (
-    <div className={`welcome-screen-root ${isExiting ? "is-exiting" : ""}`}>
-      {/* Dynamic Ambient Background Glows */}
-      <div className="welcome-ambient-glow glow-top-right" aria-hidden="true" />
-      <div className="welcome-ambient-glow glow-bottom-left" aria-hidden="true" />
-      <div className="welcome-grid-overlay" aria-hidden="true" />
+    <div className={`simple-welcome-root ${isExiting ? "is-exiting" : ""}`}>
+      {/* Soft Blue Ambient Background Elements */}
+      <div className="simple-ambient-glow glow-top" aria-hidden="true" />
+      <div className="simple-ambient-glow glow-bottom" aria-hidden="true" />
 
-      {/* Main Glassmorphism Center Card */}
-      <div className="welcome-card">
-        {/* Floating Animated Brand Emblem */}
-        <div className="welcome-emblem-container">
-          <div className="welcome-ripple-ring ring-1" />
-          <div className="welcome-ripple-ring ring-2" />
-          <div className="welcome-emblem-badge">
-            <Bot size={38} className="emblem-bot-icon" />
-            <div className="emblem-sparkle-dot">
-              <Sparkles size={14} />
+      <div className="simple-welcome-card">
+        {/* Animated Royal Blue Logo Icon */}
+        <div className="simple-logo-container">
+          <div className="simple-logo-ring" />
+          <div className="simple-logo-box">
+            <Bot size={36} className="simple-bot-icon" />
+            <div className="simple-sparkle-pill">
+              <Sparkles size={12} />
             </div>
           </div>
         </div>
 
-        {/* Title & Personalized Greeting */}
-        <div className="welcome-text-group">
-          <div className="welcome-brand-tag">
-            <span className="brand-tag-deva">शिक्षक AI</span>
-            <span className="brand-tag-dot">•</span>
-            <span className="brand-tag-latin">ShikshakAI Studio</span>
-          </div>
-          <h1 className="welcome-title">
-            Welcome, <span className="welcome-highlight">{studentName}</span>
-          </h1>
-          <p className="welcome-subtitle">
-            Preparing your interactive AI classroom & personalized curriculum...
-          </p>
+        {/* Brand Devanagari Pill */}
+        <div className="simple-brand-badge">
+          <span className="badge-deva">शिक्षक AI</span>
+          <span className="badge-sep">•</span>
+          <span className="badge-eng">Adaptive Learning</span>
         </div>
 
-        {/* Stage Micro-Steps Indicator */}
-        <div className="welcome-stages-list">
-          {STAGES.map((stage, idx) => {
-            const Icon = stage.icon;
-            const isDone = progress > (idx === 0 ? 35 : idx === 1 ? 75 : 95);
-            const isCurrent = currentStageIdx === idx && !isDone;
+        {/* Core Welcome Message */}
+        <h1 className="simple-welcome-heading">
+          Welcome to <span className="simple-blue-text">ShikshakAI</span>
+        </h1>
+        <p className="simple-welcome-sub">
+          Preparing your personalized learning studio...
+        </p>
 
-            return (
-              <div
-                key={stage.id}
-                className={`welcome-stage-item ${isDone ? "is-done" : ""} ${
-                  isCurrent ? "is-active" : ""
-                }`}
-              >
-                <div className="stage-icon-wrap">
-                  {isDone ? (
-                    <CheckCircle2 size={16} className="stage-check-icon" />
-                  ) : (
-                    <Icon size={16} className="stage-action-icon" />
-                  )}
-                </div>
-                <span className="stage-label">{stage.label}</span>
-                {isCurrent && <span className="stage-pulse-dot" />}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Linear Glowing Progress Bar */}
-        <div className="welcome-progress-section">
-          <div className="progress-meta-row">
-            <span className="progress-status-text">
-              {progress >= 100 ? "Ready to explore" : "Optimizing environment"}
-            </span>
-            <span className="progress-percent">{Math.min(100, Math.round(progress))}%</span>
-          </div>
-          <div className="welcome-progress-track">
+        {/* Minimal Blue Progress Indicator */}
+        <div className="simple-progress-container">
+          <div className="simple-progress-bar">
             <div
-              className="welcome-progress-fill"
+              className="simple-progress-indicator"
               style={{ width: `${Math.min(100, progress)}%` }}
             />
           </div>
         </div>
 
-        {/* Bottom Fast-Forward Action */}
+        {/* Fast-Forward Action */}
         <button
           type="button"
-          className="welcome-skip-btn"
+          className="simple-continue-btn"
           onClick={triggerExit}
-          title="Jump directly to workspace"
+          title="Continue to workspace"
         >
-          <span>Enter Workspace</span>
+          <span>Get Started</span>
           <ArrowRight size={14} />
         </button>
       </div>

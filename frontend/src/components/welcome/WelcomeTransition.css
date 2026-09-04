@@ -1,36 +1,37 @@
 /* ==================================================================
-   ShikshakAI — Premium Welcome Transition Screen
-   Sleek, Dynamic, Notion/Linear Style Animated Interstitial
+   ShikshakAI — Simple White & Blue Welcome Screen
+   Minimal, Modern, Crisp Aesthetic
    ================================================================== */
 
-.welcome-screen-root {
+.simple-welcome-root {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: radial-gradient(circle at 50% 30%, #1c2758 0%, #0d1228 100%);
+  background-color: #F6F8FD;
+  background-image: radial-gradient(circle at 50% 25%, #FFFFFF 0%, #EEF3FB 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #FFFFFF;
+  color: #171A24;
   overflow: hidden;
   user-select: none;
   opacity: 1;
   transform: scale(1);
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: welcomeFadeIn 0.4s ease forwards;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: simpleFadeIn 0.35s ease forwards;
 }
 
-.welcome-screen-root.is-exiting {
+.simple-welcome-root.is-exiting {
   opacity: 0;
-  transform: scale(1.03);
+  transform: scale(1.02);
   pointer-events: none;
 }
 
-@keyframes welcomeFadeIn {
+@keyframes simpleFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
@@ -38,72 +39,46 @@
   }
 }
 
-/* Dynamic Ambient Glows */
-.welcome-ambient-glow {
+/* Soft Blue Ambient Background Glows */
+.simple-ambient-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(80px);
   pointer-events: none;
-  opacity: 0.4;
-  animation: pulseGlow 6s ease-in-out infinite alternate;
+  opacity: 0.6;
 }
 
-.glow-top-right {
-  top: -100px;
-  right: -80px;
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, #5b75f0 0%, rgba(91, 117, 240, 0) 70%);
+.glow-top {
+  top: -80px;
+  right: 15%;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(79, 99, 200, 0.12) 0%, rgba(79, 99, 200, 0) 70%);
 }
 
-.glow-bottom-left {
-  bottom: -120px;
-  left: -100px;
-  width: 520px;
-  height: 520px;
-  background: radial-gradient(circle, #384eb7 0%, rgba(56, 78, 183, 0) 70%);
+.glow-bottom {
+  bottom: -100px;
+  left: 15%;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(56, 78, 183, 0.1) 0%, rgba(56, 78, 183, 0) 70%);
 }
 
-@keyframes pulseGlow {
-  0% {
-    transform: scale(0.9) translate(0, 0);
-    opacity: 0.35;
-  }
-  100% {
-    transform: scale(1.1) translate(20px, -20px);
-    opacity: 0.5;
-  }
-}
-
-.welcome-grid-overlay {
-  position: absolute;
-  inset: 0;
-  background-size: 36px 36px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-  pointer-events: none;
-}
-
-/* Glassmorphic Central Card */
-.welcome-card {
+/* Crisp White Center Card */
+.simple-welcome-card {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
   margin: 20px;
-  padding: 40px 36px 32px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 44px 36px 36px;
+  background: #FFFFFF;
+  border: 1px solid rgba(79, 99, 200, 0.16);
   border-radius: 24px;
   box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 4px 6px -1px rgba(23, 26, 36, 0.02),
+    0 16px 36px -4px rgba(56, 78, 183, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -111,308 +86,166 @@
   box-sizing: border-box;
 }
 
-/* Emblem with Ripple Rings */
-.welcome-emblem-container {
+/* Logo & Pulse Ring */
+.simple-logo-container {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 84px;
+  height: 84px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-}
-
-.welcome-ripple-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(107, 130, 232, 0.4);
-  pointer-events: none;
-}
-
-.ring-1 {
-  width: 96px;
-  height: 96px;
-  animation: rippleRing 2.4s ease-out infinite;
-}
-
-.ring-2 {
-  width: 114px;
-  height: 114px;
-  animation: rippleRing 2.4s ease-out infinite 0.8s;
-}
-
-@keyframes rippleRing {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.3);
-    opacity: 0;
-  }
-}
-
-.welcome-emblem-badge {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #4F63C8 0%, #30458F 100%);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 
-    0 8px 24px rgba(79, 99, 200, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  position: relative;
-  animation: floatEmblem 3s ease-in-out infinite;
-}
-
-@keyframes floatEmblem {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-.emblem-sparkle-dot {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #F2B84B;
-  color: #171A24;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(242, 184, 75, 0.5);
-  border: 2px solid #0d1228;
-  animation: rotateSparkle 4s linear infinite;
-}
-
-@keyframes rotateSparkle {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Typography */
-.welcome-text-group {
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.welcome-brand-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #CAD4F8;
-  margin-bottom: 10px;
-  letter-spacing: 0.02em;
-}
-
-.brand-tag-deva {
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.brand-tag-dot {
-  opacity: 0.5;
-}
-
-.welcome-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0 0 8px 0;
-  color: #FFFFFF;
-  line-height: 1.25;
-}
-
-.welcome-highlight {
-  background: linear-gradient(135deg, #A5B4FC 0%, #FFFFFF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.welcome-subtitle {
-  font-size: 0.86rem;
-  color: rgba(255, 255, 255, 0.72);
-  margin: 0;
-  line-height: 1.45;
-  max-width: 380px;
-}
-
-/* Micro-Stages List */
-.welcome-stages-list {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.welcome-stage-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
-  transition: all 0.25s ease;
-  position: relative;
-  text-align: left;
-}
-
-.welcome-stage-item.is-active {
-  background: rgba(79, 99, 200, 0.18);
-  border-color: rgba(107, 130, 232, 0.4);
-  color: #FFFFFF;
-  box-shadow: 0 2px 12px rgba(79, 99, 200, 0.15);
-}
-
-.welcome-stage-item.is-done {
-  background: rgba(76, 175, 125, 0.12);
-  border-color: rgba(76, 175, 125, 0.3);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.stage-icon-wrap {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.welcome-stage-item.is-done .stage-check-icon {
-  color: #4CAF7D;
-}
-
-.welcome-stage-item.is-active .stage-action-icon {
-  color: #A5B4FC;
-  animation: pulseIcon 1.2s infinite ease-in-out;
-}
-
-@keyframes pulseIcon {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
-
-.stage-label {
-  flex: 1;
-  font-weight: 500;
-}
-
-.stage-pulse-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #6B82E8;
-  box-shadow: 0 0 8px #6B82E8;
-  animation: blink 1s infinite alternate;
-}
-
-@keyframes blink {
-  0% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-/* Progress Bar */
-.welcome-progress-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-bottom: 20px;
 }
 
-.progress-meta-row {
+.simple-logo-ring {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  background: rgba(79, 99, 200, 0.12);
+  animation: pulseSoftRing 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseSoftRing {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.16);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.8;
+  }
+}
+
+.simple-logo-box {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #4F63C8 0%, #384EB7 100%);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.78rem;
+  justify-content: center;
+  color: #FFFFFF;
+  position: relative;
+  box-shadow: 0 8px 20px rgba(56, 78, 183, 0.28);
 }
 
-.progress-status-text {
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
+.simple-bot-icon {
+  color: #FFFFFF;
 }
 
-.progress-percent {
-  color: #A5B4FC;
+.simple-sparkle-pill {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #EEF2FF;
+  border: 2px solid #FFFFFF;
+  color: #4F63C8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(79, 99, 200, 0.25);
+}
+
+/* Brand Devanagari Badge */
+.simple-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #EEF2FF;
+  border: 1px solid rgba(79, 99, 200, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #384EB7;
+  margin-bottom: 12px;
+}
+
+.badge-deva {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
-.welcome-progress-track {
+.badge-sep {
+  opacity: 0.4;
+}
+
+.badge-eng {
+  font-weight: 500;
+  color: #4F63C8;
+}
+
+/* Heading & Subtitle */
+.simple-welcome-heading {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #171A24;
+  margin: 0 0 8px 0;
+  line-height: 1.25;
+}
+
+.simple-blue-text {
+  color: #384EB7;
+}
+
+.simple-welcome-sub {
+  font-size: 0.88rem;
+  color: #687083;
+  margin: 0 0 26px 0;
+  line-height: 1.45;
+}
+
+/* Progress Indicator */
+.simple-progress-container {
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  max-width: 280px;
+  margin-bottom: 24px;
+}
+
+.simple-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: #EEF2FF;
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
 }
 
-.welcome-progress-fill {
+.simple-progress-indicator {
   height: 100%;
-  background: linear-gradient(90deg, #4F63C8 0%, #6B82E8 50%, #A5B4FC 100%);
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(107, 130, 232, 0.6);
-  transition: width 0.05s linear;
+  background: linear-gradient(90deg, #4F63C8 0%, #384EB7 100%);
+  border-radius: 8px;
+  transition: width 0.04s linear;
 }
 
-/* Skip/Fast-Forward Button */
-.welcome-skip-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 8px 16px;
+/* Continue Button */
+.simple-continue-btn {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: #384EB7;
+  padding: 8px 18px;
   border-radius: 12px;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
-.welcome-skip-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(2px);
+.simple-continue-btn:hover {
+  background: #EEF2FF;
+  border-color: rgba(79, 99, 200, 0.3);
+  color: #30458F;
+  transform: translateY(-1px);
 }
