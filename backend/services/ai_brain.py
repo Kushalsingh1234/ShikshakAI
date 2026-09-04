@@ -107,10 +107,10 @@ Create a structured lesson plan for:
     if document_context:
         user_prompt += f"\n- Ground your lesson in this source textbook material:\n{document_context[:6000]}"
 
-    # 1. Try Primary: Google Gemini (gemini-2.0-flash with fallback to gemini-1.5-flash)
+    # 1. Try Primary: Google Gemini (gemini-3.6-flash, gemini-3.7-flash, gemini-3.8-flash, gemini-2.5-flash)
     gemini_client = get_gemini_client()
     if gemini_client:
-        for model_name in ["gemini-2.0-flash", "gemini-1.5-flash"]:
+        for model_name in ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-2.5-flash"]:
             try:
                 response = gemini_client.models.generate_content(
                     model=model_name,
@@ -127,26 +127,30 @@ Create a structured lesson plan for:
             except Exception as e:
                 print(f"Gemini generation error with {model_name}: {e}. Trying next...")
 
-    # 2. Try Fallback: Groq or OpenAI via installed openai package
+    # 2. Try Fallback: Groq or OpenAI
     groq_key = os.getenv("GROQ_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
 
     if is_valid_key(groq_key):
         try:
-            from openai import OpenAI
-            groq_client = OpenAI(api_key=groq_key, base_url="https://api.groq.com/openai/v1")
-            chat_completion = groq_client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": user_prompt}
-                ],
-                model="llama-3.3-70b-versatile",
-                response_format={"type": "json_object"},
-                temperature=0.7,
-            )
-            raw_text = clean_json_string(chat_completion.choices[0].message.content)
-            data = json.loads(raw_text)
-            return LessonPlan(**data)
+            from groq import Groq
+            groq_client = Groq(api_key=groq_key)
+            for groq_model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]:
+                try:
+                    chat_completion = groq_client.chat.completions.create(
+                        messages=[
+                            {"role": "system", "content": system_instruction},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        model=groq_model,
+                        response_format={"type": "json_object"},
+                        temperature=0.7,
+                    )
+                    raw_text = clean_json_string(chat_completion.choices[0].message.content)
+                    data = json.loads(raw_text)
+                    return LessonPlan(**data)
+                except Exception as m_err:
+                    print(f"Groq model {groq_model} failed: {m_err}")
         except Exception as groq_err:
             print(f"Groq fallback error: {groq_err}")
 
@@ -212,7 +216,7 @@ Output strictly valid JSON:
 
     gemini_client = get_gemini_client()
     if gemini_client:
-        for model_name in ["gemini-2.0-flash", "gemini-1.5-flash"]:
+        for model_name in ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-2.5-flash"]:
             try:
                 response = gemini_client.models.generate_content(
                     model=model_name,
@@ -231,19 +235,23 @@ Output strictly valid JSON:
     groq_key = os.getenv("GROQ_API_KEY")
     if is_valid_key(groq_key):
         try:
-            from openai import OpenAI
-            groq_client = OpenAI(api_key=groq_key, base_url="https://api.groq.com/openai/v1")
-            chat_completion = groq_client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": "You are ShikshakAI, an empathetic educator providing constructive feedback."},
-                    {"role": "user", "content": eval_prompt}
-                ],
-                model="llama-3.3-70b-versatile",
-                response_format={"type": "json_object"},
-                temperature=0.4,
-            )
-            raw = clean_json_string(chat_completion.choices[0].message.content)
-            return json.loads(raw)
+            from groq import Groq
+            groq_client = Groq(api_key=groq_key)
+            for groq_model in ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]:
+                try:
+                    chat_completion = groq_client.chat.completions.create(
+                        messages=[
+                            {"role": "system", "content": "You are ShikshakAI, an empathetic educator providing constructive feedback."},
+                            {"role": "user", "content": eval_prompt}
+                        ],
+                        model=groq_model,
+                        response_format={"type": "json_object"},
+                        temperature=0.4,
+                    )
+                    raw = clean_json_string(chat_completion.choices[0].message.content)
+                    return json.loads(raw)
+                except Exception as m_err:
+                    print(f"Groq evaluation model {groq_model} failed: {m_err}")
         except Exception as e:
             print(f"Groq evaluation error: {e}")
 

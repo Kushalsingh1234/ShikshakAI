@@ -497,7 +497,7 @@ export default function TeacherAvatar({
 
       {footer && <div className="studio-footer-nav">{footer}</div>}
 
-      <audio ref={audioRef} onEnded={onAudioEnded} crossOrigin="anonymous" style={{ display: "none" }} />
+      <audio ref={audioRef} onEnded={onAudioEnded} style={{ display: "none" }} />
     </div>
   );
 }
