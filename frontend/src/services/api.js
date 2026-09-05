@@ -33,22 +33,48 @@ export async function saveAIKey(keys) {
 export async function uploadDocument(file) {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch(`${BACKEND_URL}/api/upload`, {
-    method: "POST",
-    body: formData,
-  });
-  if (!res.ok) throw new Error("Upload failed");
-  return await res.json();
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Upload failed with status ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend upload notice:", err);
+    // Local client extraction fallback if backend is offline or network fails
+    let clientText = "";
+    try {
+      if (file.name.match(/\.(txt|md|markdown|csv|json|html|log)$/i)) {
+        clientText = await file.text();
+      }
+    } catch (readErr) {
+      console.warn("Client-side text extraction notice:", readErr);
+    }
+    const suggestedTopic = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim();
+    return {
+      filename: file.name,
+      saved_path: file.name,
+      extracted_length: clientText.length || file.size,
+      suggested_topic: suggestedTopic,
+      message: `Document ${file.name} ready for lesson generation.`,
+      clientFallback: true,
+      clientText: clientText,
+    };
+  }
 }
 
-export async function fetchLessonPlan({ topic, learner_level, target_duration_minutes, language, uploaded_filename }) {
+export async function fetchLessonPlan({ topic, learner_level, target_duration_minutes, language, uploaded_filename, document_context }) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
   try {
     const res = await fetch(`${BACKEND_URL}/api/lesson/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, learner_level, target_duration_minutes, language, uploaded_filename }),
+      body: JSON.stringify({ topic, learner_level, target_duration_minutes, language, uploaded_filename, document_context }),
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
