@@ -30,9 +30,6 @@ export default function AppSidebar({ activeTab = "home", onSelectTab, onGoLandin
 
   return (
     <aside className="app-sidebar" aria-label="Application Navigation">
-      {/* Decorative Outer Left Spine */}
-      <div className="sidebar-spine" aria-hidden="true" />
-
       {/* Brand Header */}
       <div className="sidebar-brand-header">
         <button

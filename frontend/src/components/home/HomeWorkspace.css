@@ -73,20 +73,6 @@
   user-select: none;
 }
 
-/* Decorative Outer Left Spine */
-.sidebar-spine {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 14px;
-  background: #5D75D7;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
 .sidebar-brand-header {
   padding: 4px 20px 24px 28px;
   position: relative;
