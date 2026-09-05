@@ -1,4 +1,5 @@
 import os
+import re
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -30,10 +31,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("static/audio", exist_ok=True)
-os.makedirs("uploads", exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_AUDIO_DIR = os.path.join(BASE_DIR, "static", "audio")
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+os.makedirs(STATIC_AUDIO_DIR, exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # In-memory document storage for current active uploaded content
 ACTIVE_DOCUMENTS: Dict[str, str] = {}
@@ -44,6 +49,7 @@ class LessonRequest(BaseModel):
     target_duration_minutes: int = 20       # 5 | 20 | 60 | 7-day
     language: str = "en"                    # en | hi | hinglish
     uploaded_filename: Optional[str] = None
+    document_context: Optional[str] = None
 
 class EvaluationRequest(BaseModel):
     question: str
@@ -150,27 +156,36 @@ async def health_check():
 
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
-    """Accepts PDF, DOCX, PPTX, TXT files, extracts content for RAG grounding."""
-    allowed_exts = [".pdf", ".docx", ".pptx", ".txt"]
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    
-    if file_ext not in allowed_exts:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type {file_ext}. Allowed: {allowed_exts}")
-        
-    save_path = os.path.join("uploads", file.filename)
+    """Accepts PDF, DOCX, DOC, PPTX, PPT, TXT, MD, CSV, JSON and other educational materials, extracts content for RAG grounding."""
+    raw_filename = file.filename or "uploaded_document.txt"
+    safe_filename = re.sub(r'[^\w\-_\. ]', '_', os.path.basename(raw_filename)).strip()
+    if not safe_filename:
+        safe_filename = "uploaded_document.txt"
+
+    save_path = os.path.join(UPLOAD_DIR, safe_filename)
     content = await file.read()
     with open(save_path, "wb") as buffer:
         buffer.write(content)
-        
+
     # Extract readable text
-    extracted_text = extract_document_content(save_path)
-    ACTIVE_DOCUMENTS[file.filename] = extracted_text
+    try:
+        extracted_text = extract_document_content(save_path)
+    except Exception as e:
+        print(f"Extraction error for {safe_filename}: {e}")
+        extracted_text = f"Document: {safe_filename}"
+
+    ACTIVE_DOCUMENTS[safe_filename] = extracted_text
+    ACTIVE_DOCUMENTS[raw_filename] = extracted_text
+
+    suggested_topic = re.sub(r'\.[^/.]+$', '', safe_filename).replace('-', ' ').replace('_', ' ').strip()
 
     return {
-        "filename": file.filename,
+        "filename": safe_filename,
+        "original_filename": raw_filename,
         "saved_path": save_path,
         "extracted_length": len(extracted_text),
-        "message": f"Successfully parsed {file.filename} ({len(extracted_text)} characters). Grounding ready."
+        "suggested_topic": suggested_topic,
+        "message": f"Successfully parsed {safe_filename} ({len(extracted_text)} characters). Grounding ready."
     }
 
 @app.post("/api/lesson/plan", response_model=LessonPlan)
@@ -180,9 +195,16 @@ def create_lesson_plan(request: LessonRequest):
     Understands topic or uploaded document, creates subject-aware visuals (KaTeX, Mermaid, Code),
     and sets up checkpoints for misconception detection.
     """
-    doc_context = None
-    if request.uploaded_filename and request.uploaded_filename in ACTIVE_DOCUMENTS:
-        doc_context = ACTIVE_DOCUMENTS[request.uploaded_filename]
+    doc_context = request.document_context
+    if not doc_context and request.uploaded_filename:
+        if request.uploaded_filename in ACTIVE_DOCUMENTS:
+            doc_context = ACTIVE_DOCUMENTS[request.uploaded_filename]
+        else:
+            # Check on disk in UPLOAD_DIR
+            disk_path = os.path.join(UPLOAD_DIR, request.uploaded_filename)
+            if os.path.exists(disk_path):
+                doc_context = extract_document_content(disk_path)
+                ACTIVE_DOCUMENTS[request.uploaded_filename] = doc_context
 
     plan = generate_pedagogical_lesson(
         topic=request.topic,
