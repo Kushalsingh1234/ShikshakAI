@@ -9,15 +9,44 @@ import {
   X,
   Search,
   Sparkles,
+  UploadCloud,
+  Loader2,
 } from "lucide-react";
-import { getMaterialsForTopic, downloadFile } from "../../utils/learningHistory";
+import { getMaterialsForTopic, downloadFile, addSearchHistoryItem } from "../../utils/learningHistory";
+import { uploadDocument } from "../../services/api";
 import "./Views.css";
 
-export default function MaterialsView({ searchHistory = [], onNavigateTab }) {
+export default function MaterialsView({ searchHistory = [], onNavigateTab, onRefreshHistory }) {
   const [selectedTopicId, setSelectedTopicId] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [previewItem, setPreviewItem] = useState(null);
   const [downloadSuccessToast, setDownloadSuccessToast] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleDirectUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const res = await uploadDocument(file);
+      const docTopic = res.suggested_topic || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim();
+      addSearchHistoryItem({
+        topic: docTopic,
+        teacherName: "Dr. Maya",
+        level: "beginner",
+        durationMinutes: 20,
+        language: "en",
+        uploadedFilename: res.filename,
+      });
+      if (onRefreshHistory) onRefreshHistory();
+      setDownloadSuccessToast(`Document uploaded & indexed: ${file.name}`);
+      setTimeout(() => setDownloadSuccessToast(""), 4000);
+    } catch (err) {
+      console.warn("Direct upload error:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Flatten all materials across past search history
   const allMaterials = searchHistory.flatMap((histItem) => {
@@ -91,7 +120,32 @@ export default function MaterialsView({ searchHistory = [], onNavigateTab }) {
             Download structured lecture notes, revision cheat sheets, and formula guides generated from your past searches.
           </p>
         </div>
-        <div className="view-hero-actions">
+        <div className="view-hero-actions" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <label
+            className="resume-lesson-btn"
+            style={{
+              cursor: isUploading ? "wait" : "pointer",
+              background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              color: "#ffffff",
+              fontSize: "13px",
+              fontWeight: 500,
+            }}
+          >
+            {isUploading ? <Loader2 size={14} className="spin-icon" /> : <UploadCloud size={14} />}
+            <span>{isUploading ? "Uploading Document..." : "Upload Document"}</span>
+            <input
+              type="file"
+              accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.markdown,.csv,.json"
+              onChange={handleDirectUpload}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+          </label>
           {filteredMaterials.length > 0 && (
             <button
               type="button"
