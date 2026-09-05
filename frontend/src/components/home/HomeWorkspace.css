@@ -649,6 +649,33 @@
   box-shadow: 0 0 0 3px rgba(79, 99, 200, 0.12);
 }
 
+.compact-searchbar-wrapper.has-search-error {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+  animation: searchbar-shake 0.4s ease;
+}
+
+@keyframes searchbar-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.searchbar-topic-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #DC2626;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  animation: fadeInDown 0.2s ease;
+}
+
 .compact-searchbar-icon {
   width: 26px;
   height: 26px;
@@ -696,6 +723,138 @@
 .compact-clear-btn:hover {
   background: var(--color-soft-blue);
   color: var(--color-primary);
+}
+
+/* Make a Full Course Option (Below Search Bar) */
+.make-course-option-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(79, 99, 200, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%);
+  border: 1px dashed rgba(79, 99, 200, 0.35);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.make-course-option-banner.banner-shake {
+  animation: searchbar-shake 0.4s ease;
+}
+
+.make-course-option-banner.is-empty {
+  opacity: 0.75;
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.make-course-option-banner.is-empty:hover {
+  opacity: 0.9;
+  background: rgba(79, 99, 200, 0.04);
+  border-color: rgba(79, 99, 200, 0.25);
+}
+
+.make-course-option-banner.is-empty .make-course-icon-badge {
+  background: #94A3B8;
+  box-shadow: none;
+}
+
+.make-course-option-banner.is-active {
+  background: linear-gradient(135deg, rgba(79, 99, 200, 0.1) 0%, rgba(99, 102, 241, 0.04) 100%);
+  border-color: var(--color-primary);
+}
+
+.make-course-option-banner.is-active .make-course-title {
+  color: var(--color-primary);
+}
+
+.make-course-option-banner:hover {
+  background: linear-gradient(135deg, rgba(79, 99, 200, 0.14) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border-color: var(--color-primary);
+}
+
+.make-course-action-btn.is-disabled,
+.make-course-action-btn:disabled {
+  background: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  opacity: 0.75 !important;
+}
+
+.make-course-option-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.make-course-icon-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(79, 99, 200, 0.3);
+}
+
+.make-course-text-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.make-course-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.make-course-subtitle {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.make-course-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #4F63C8 0%, #3B4EAA 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(79, 99, 200, 0.25);
+  flex-shrink: 0;
+}
+
+.make-course-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 99, 200, 0.35);
+}
+
+.make-course-action-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* 2. Sleek Upload Box */

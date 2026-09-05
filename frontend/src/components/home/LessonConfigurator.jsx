@@ -13,8 +13,11 @@ import {
   Atom,
   Code,
   BookOpen,
+  Layers,
+  AlertCircle,
 } from "lucide-react";
-import { uploadDocument } from "../../services/api";
+import { uploadDocument, fetchGeneratedCourse } from "../../services/api";
+import { saveCourse, generateCurriculumForTopic } from "../../services/courseStorage";
 import { TEACHERS } from "../../constants/teachers";
 
 export default function LessonConfigurator({
@@ -24,6 +27,7 @@ export default function LessonConfigurator({
   onSelectTeacher,
   topic = "",
   setTopic,
+  onNavigateTab,
 }) {
   const [learnerLevel, setLearnerLevel] = useState("beginner");
   const [duration, setDuration] = useState(20);
@@ -31,6 +35,49 @@ export default function LessonConfigurator({
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isCreatingCourse, setIsCreatingCourse] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+
+  const hasTopic = Boolean(topic && topic.trim().length > 0);
+
+  const handleCreateFullCourse = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!hasTopic) {
+      setSearchError(true);
+      const input = document.getElementById("lesson-topic-input");
+      if (input) {
+        input.focus();
+      }
+      setTimeout(() => setSearchError(false), 3200);
+      return; // Will NOT work when search bar is empty!
+    }
+    const cleanTopic = topic.trim();
+    setIsCreatingCourse(true);
+    try {
+      let course;
+      try {
+        course = await fetchGeneratedCourse({
+          topic: cleanTopic,
+          learner_level: learnerLevel,
+          language,
+        });
+      } catch (err) {
+        console.warn("Backend course generation fallback to local generator:", err);
+        course = generateCurriculumForTopic(cleanTopic, learnerLevel);
+      }
+      saveCourse(course);
+      if (onNavigateTab) {
+        onNavigateTab("courses", { selectedCourseId: course.id });
+      }
+    } catch (e) {
+      console.error("Course creation failed:", e);
+    } finally {
+      setIsCreatingCourse(false);
+    }
+  };
 
   const durations = [
     { val: 5, label: "5 min" },
@@ -122,7 +169,7 @@ export default function LessonConfigurator({
             What would you like to learn?
           </label>
 
-          <div className="compact-searchbar-wrapper">
+          <div className={`compact-searchbar-wrapper ${searchError ? "has-search-error" : ""}`}>
             <div className="compact-searchbar-icon">
               <Sparkles size={15} />
             </div>
@@ -131,7 +178,10 @@ export default function LessonConfigurator({
               type="text"
               className="compact-searchbar-input"
               value={topic}
-              onChange={(e) => setTopic(e.target.value)}
+              onChange={(e) => {
+                setTopic(e.target.value);
+                if (searchError) setSearchError(false);
+              }}
               placeholder="Ask a question, enter a concept, or skill..."
               autoFocus
             />
@@ -139,13 +189,65 @@ export default function LessonConfigurator({
               <button
                 type="button"
                 className="compact-clear-btn"
-                onClick={() => setTopic("")}
+                onClick={() => {
+                  setTopic("");
+                  if (searchError) setSearchError(false);
+                }}
                 title="Clear input"
                 aria-label="Clear input"
               >
                 <X size={14} />
               </button>
             )}
+          </div>
+
+          {searchError && (
+            <div className="searchbar-topic-error-msg" role="alert">
+              <AlertCircle size={14} />
+              <span>Please enter what you would like to learn in the search bar first!</span>
+            </div>
+          )}
+
+          {/* Option directly below search bar: Make a Full Course */}
+          <div
+            className={`make-course-option-banner ${hasTopic ? "is-active" : "is-empty"} ${searchError ? "banner-shake" : ""}`}
+            onClick={!hasTopic ? handleCreateFullCourse : undefined}
+            title={!hasTopic ? "Enter a topic in the search bar above to create a course" : `Create full course for "${topic.trim()}"`}
+          >
+            <div className="make-course-option-left">
+              <div className="make-course-icon-badge">
+                <GraduationCap size={15} />
+              </div>
+              <div className="make-course-text-stack">
+                <span className="make-course-title">
+                  {hasTopic ? `Make a Full Course on "${topic.trim()}"` : "Make a Full Course"}
+                </span>
+                <span className="make-course-subtitle">
+                  {hasTopic
+                    ? "Generate a complete curriculum & learn topic-by-topic in Courses"
+                    : "Enter a topic in the search bar above to enable course creation"}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className={`make-course-action-btn ${!hasTopic ? "is-disabled" : ""}`}
+              onClick={handleCreateFullCourse}
+              disabled={isCreatingCourse}
+              title={!hasTopic ? "Type a topic in the search bar above to create a course" : "Generate a multi-topic course curriculum"}
+            >
+              {isCreatingCourse ? (
+                <>
+                  <Loader2 size={13} className="spin-icon" />
+                  <span>Building Course...</span>
+                </>
+              ) : (
+                <>
+                  <Layers size={13} />
+                  <span>Make a Course</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

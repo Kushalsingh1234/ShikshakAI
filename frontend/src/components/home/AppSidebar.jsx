@@ -17,7 +17,7 @@ export default function AppSidebar({ activeTab = "home", onSelectTab, onGoLandin
   const primaryNav = [
     { id: "home", label: "Dashboard", icon: Home },
     { id: "learning", label: "My Learning", icon: BookOpen },
-    { id: "lessons", label: "Lessons", icon: GraduationCap },
+    { id: "courses", label: "Courses", icon: GraduationCap },
     { id: "materials", label: "Materials", icon: FolderOpen },
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "assessments", label: "Assessments", icon: ClipboardCheck },
