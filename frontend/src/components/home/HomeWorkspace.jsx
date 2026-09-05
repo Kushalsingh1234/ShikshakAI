@@ -11,6 +11,7 @@ export default function HomeWorkspace({
   onSelectTeacher,
   topic,
   setTopic,
+  onNavigateTab,
 }) {
   return (
     <div className="home-workspace-container">
@@ -28,6 +29,7 @@ export default function HomeWorkspace({
             onSelectTeacher={onSelectTeacher}
             topic={topic}
             setTopic={setTopic}
+            onNavigateTab={onNavigateTab}
           />
         </div>
 

@@ -6,8 +6,14 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 
 from services.tts_service import generate_speech
-from services.lesson_service import LessonPlan
-from services.ai_brain import generate_pedagogical_lesson, evaluate_student_response, is_valid_key
+from services.lesson_service import LessonPlan, synthesize_scene_script
+from services.ai_brain import (
+    generate_pedagogical_lesson,
+    evaluate_student_response,
+    is_valid_key,
+    ask_contextual_teacher,
+    generate_adaptive_scene
+)
 from services.rag_service import extract_document_content
 
 app = FastAPI(
@@ -44,6 +50,30 @@ class EvaluationRequest(BaseModel):
     student_answer: str
     correct_answer: str
     misconception_guide: Optional[str] = None
+    language: str = "en"
+
+class AskTeacherRequest(BaseModel):
+    topic: str
+    scene_title: str
+    teacher_name: str = "Dr. Maya"
+    current_visual_content: Optional[str] = None
+    question: str
+    language: str = "en"
+
+class AdaptRequest(BaseModel):
+    topic: str
+    misconception: str
+    original_question: str
+    student_answer: str
+    language: str = "en"
+
+class ExplanationScriptRequest(BaseModel):
+    topic: str = "Lesson Concept"
+    teacher_script: str
+    step_type: str = "explanation"
+    visual_type: Optional[str] = None
+    visual_title: Optional[str] = None
+    visual_content: Optional[str] = None
     language: str = "en"
 
 class KeyConfigRequest(BaseModel):
@@ -144,7 +174,7 @@ async def upload_document(file: UploadFile = File(...)):
     }
 
 @app.post("/api/lesson/plan", response_model=LessonPlan)
-async def create_lesson_plan(request: LessonRequest):
+def create_lesson_plan(request: LessonRequest):
     """
     Generates structured lesson plan using Google Gemini with Groq fallback.
     Understands topic or uploaded document, creates subject-aware visuals (KaTeX, Mermaid, Code),
@@ -163,6 +193,27 @@ async def create_lesson_plan(request: LessonRequest):
     )
     return plan
 
+from services.course_service import generate_curated_course, CourseModel
+
+class CourseGenerateRequest(BaseModel):
+    topic: str
+    learner_level: str = "beginner"
+    language: str = "en"
+
+@app.post("/api/course/generate", response_model=CourseModel)
+def create_course(req: CourseGenerateRequest):
+    """
+    Generates a full comprehensive course syllabus for any topic,
+    breaking it down into structured, learnable modules with duration, objectives, and order.
+    """
+    if not req.topic or not req.topic.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Topic is required. Please type a topic in the search bar to generate a course."
+        )
+    course = generate_curated_course(topic=req.topic.strip(), level=req.learner_level)
+    return course
+
 @app.post("/api/tts/speak")
 async def text_to_speech(
     text: str = Form(...),
@@ -174,7 +225,7 @@ async def text_to_speech(
     return {"audio_url": audio_url}
 
 @app.post("/api/evaluate")
-async def evaluate_answer(req: EvaluationRequest):
+def evaluate_answer(req: EvaluationRequest):
     """
     Pedagogically evaluates student response:
     Detects conceptual misconceptions, explains intuition with fresh analogies, and adapts next steps.
@@ -187,6 +238,56 @@ async def evaluate_answer(req: EvaluationRequest):
         language=req.language
     )
     return result
+
+@app.post("/api/studio/ask")
+def ask_teacher(req: AskTeacherRequest):
+    """
+    Context-aware teacher answering live doubts during an active scene.
+    """
+    return ask_contextual_teacher(
+        topic=req.topic,
+        scene_title=req.scene_title,
+        teacher_name=req.teacher_name,
+        current_visual_content=req.current_visual_content,
+        student_question=req.question,
+        language=req.language
+    )
+
+@app.post("/api/studio/adapt")
+def adapt_lesson(req: AdaptRequest):
+    """
+    Generates an adaptive explanation scene tailored to resolve a detected student misconception.
+    """
+    return generate_adaptive_scene(
+        topic=req.topic,
+        misconception=req.misconception,
+        original_question=req.original_question,
+        student_answer=req.student_answer,
+        language=req.language
+    )
+
+@app.post("/api/explanation/script")
+def create_explanation_script(req: ExplanationScriptRequest):
+    """
+    Post-processing engine converting raw explanation/script into a synchronized 3Blue1Brown-style
+    scene script timeline with 3D/formula/diagram visual payloads, camera, and presenter focus instructions.
+    """
+    scenes = synthesize_scene_script(
+        teacher_script=req.teacher_script,
+        topic=req.topic,
+        step_type=req.step_type,
+        visual_type=req.visual_type,
+        visual_title=req.visual_title,
+        visual_content=req.visual_content,
+        language=req.language
+    )
+    total_duration = sum(s.duration for s in scenes)
+    return {
+        "topic": req.topic,
+        "total_duration": round(total_duration, 2),
+        "total_scenes": len(scenes),
+        "scene_script": [s.model_dump() for s in scenes]
+    }
 
 if __name__ == "__main__":
     import uvicorn

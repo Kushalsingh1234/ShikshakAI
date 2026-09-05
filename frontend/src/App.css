@@ -266,26 +266,30 @@ body {
 }
 
 /* ==========================================================================
-   Dual Stage Layout (Responsive Grid)
+   Dual Stage Layout (Responsive Grid — Fixed Viewport Non-Scrollable)
    ========================================================================== */
 .stage-grid {
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 18px;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 14px;
   flex: 1;
-  align-items: stretch;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  align-items: stretch;
 }
 
 @media (max-width: 1100px) {
   .stage-grid {
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 10px;
   }
 }
 
 @media (max-width: 880px) {
   .stage-grid {
     grid-template-columns: 1fr;
+    overflow-y: auto;
   }
 }
 
@@ -296,6 +300,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .studio-stage-card {
@@ -303,12 +309,14 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  padding: 18px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   height: 100%;
-  justify-content: space-between;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .studio-card-header {
@@ -454,7 +462,10 @@ body {
   background: #090e18;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  height: 310px;
+  flex: 0 0 170px;
+  height: 170px;
+  min-height: 130px;
+  max-height: 185px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,7 +474,8 @@ body {
 
 @media (max-width: 880px) {
   .studio-viewport-frame {
-    height: 260px;
+    flex: 0 0 200px;
+    height: 200px;
   }
 }
 
@@ -476,24 +488,24 @@ body {
 /* Studio Audio Equalizer HUD */
 .studio-hud-bar {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
-  background: rgba(9, 14, 24, 0.85);
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  background: rgba(9, 14, 24, 0.88);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hud-wave-bars {
   display: flex;
   gap: 3px;
   align-items: center;
-  height: 20px;
+  height: 16px;
 }
 
 .hud-bar {
@@ -505,7 +517,7 @@ body {
 }
 
 .hud-status-caption {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -518,23 +530,33 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 14px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .transcript-text {
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  line-height: 1.42;
   color: #e2e8f0;
   font-style: normal;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .transcript-actions-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-top: 2px;
 }
 
 .action-chip {
@@ -1082,12 +1104,15 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  padding: 20px;
+  padding: 12px 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 520px;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .smartboard-header {
@@ -1095,9 +1120,10 @@ body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 14px;
+  padding-bottom: 8px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .smartboard-title-group {
@@ -1107,7 +1133,7 @@ body {
 }
 
 .smartboard-topic {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #f8fafc;
 }
@@ -1117,19 +1143,19 @@ body {
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
-  padding: 3px;
-  gap: 3px;
+  padding: 2px;
+  gap: 2px;
 }
 
 .smartboard-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  padding: 5px 12px;
+  font-size: 0.76rem;
+  padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -1148,10 +1174,10 @@ body {
 }
 
 .step-progress-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.04);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
   border: 1px solid var(--border-subtle);
   font-weight: 600;
@@ -1159,10 +1185,13 @@ body {
 
 .smartboard-canvas {
   flex: 1;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   overflow-y: auto;
+  padding-right: 2px;
 }
 
 .visual-container {
@@ -2473,32 +2502,42 @@ body {
 /* ==========================================================================
    Active Classroom Integrated into AppShell — Studio Dark Theme
    ========================================================================== */
+/* ==========================================================================
+   Active Classroom Integrated into AppShell — Studio Dark Theme
+   ========================================================================== */
 .active-classroom-wrapper {
-  padding: 16px 20px 24px;
-  max-width: 1560px;
+  padding: 10px 14px 12px;
+  max-width: 1600px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-height: calc(100vh - 56px);
+  gap: 10px;
+  height: calc(100vh - 52px);
+  max-height: calc(100vh - 52px);
+  box-sizing: border-box;
+  overflow: hidden;
   background: #080C16;
   background-image: 
     radial-gradient(circle at 8% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
     radial-gradient(circle at 92% 90%, rgba(6, 182, 212, 0.05) 0%, transparent 45%);
-  border-radius: 16px;
+  border-radius: 12px;
 }
 
 .active-classroom-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 18px;
-  background: rgba(15, 23, 42, 0.75);
+  padding: 6px 14px;
+  min-height: 42px;
+  max-height: 44px;
+  flex-shrink: 0;
+  background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  gap: 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  gap: 10px;
 }
 
 .classroom-topbar-left {

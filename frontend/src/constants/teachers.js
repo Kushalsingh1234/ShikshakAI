@@ -10,6 +10,8 @@ export const TEACHERS = [
     tone: "Analytical & Socratic",
     greeting: "Welcome! Let's break down complex physical phenomena and mathematical intuitions together step-by-step.",
     avatarKey: "dr_maya",
+    avatarUrl: "/avatars/dr_maya.jpg",
+    avatarTalkUrl: "/avatars/dr_maya_mouth.png?v=2",
   },
   {
     id: "prof-alex",
@@ -22,6 +24,8 @@ export const TEACHERS = [
     tone: "Hands-on & Pragmatic",
     greeting: "Hey there! Ready to write clean code, trace algorithms, and build intuitive mental models together?",
     avatarKey: "prof_alex",
+    avatarUrl: "/avatars/prof_alex.jpg",
+    avatarTalkUrl: "/avatars/prof_alex_mouth.png?v=2",
   },
   {
     id: "ananya",
@@ -34,6 +38,8 @@ export const TEACHERS = [
     tone: "Empathetic & Story-driven",
     greeting: "नमस्ते! Welcome. Let us explore rich ideas, deep contexts, and poetic expressions together.",
     avatarKey: "ananya",
+    avatarUrl: "/avatars/ananya.jpg",
+    avatarTalkUrl: "/avatars/ananya_mouth.png?v=2",
   },
 ];
 
