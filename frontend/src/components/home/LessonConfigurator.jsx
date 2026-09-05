@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Check,
   UploadCloud,
@@ -29,6 +29,7 @@ export default function LessonConfigurator({
   setTopic,
   onNavigateTab,
 }) {
+  const fileInputRef = useRef(null);
   const [learnerLevel, setLearnerLevel] = useState("beginner");
   const [duration, setDuration] = useState(20);
   const [language, setLanguage] = useState("en");
@@ -108,13 +109,25 @@ export default function LessonConfigurator({
         size: (file.size / 1024).toFixed(1) + " KB",
         type: file.name.split(".").pop()?.toUpperCase() || "DOC",
         serverFilename: res.filename,
+        clientText: res.clientText || null,
+      });
+      if (!topic.trim()) {
+        const suggested = res.suggested_topic || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        if (suggested.trim()) setTopic(suggested);
+      }
+    } catch (err) {
+      console.warn("Upload fallback notice:", err);
+      setUploadedFile({
+        name: file.name,
+        size: (file.size / 1024).toFixed(1) + " KB",
+        type: file.name.split(".").pop()?.toUpperCase() || "DOC",
+        serverFilename: file.name,
+        clientText: null,
       });
       if (!topic.trim()) {
         const suggested = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
         if (suggested.trim()) setTopic(suggested);
       }
-    } catch (err) {
-      alert("Failed to upload document: " + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -147,7 +160,7 @@ export default function LessonConfigurator({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const finalTopic = topic.trim() || "Core Concepts & Fundamentals";
+    const finalTopic = topic.trim() || uploadedFile?.name?.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ") || "Core Concepts & Fundamentals";
     onStartLesson({
       topic: finalTopic,
       learner_level: learnerLevel,
@@ -155,6 +168,7 @@ export default function LessonConfigurator({
       language: language,
       teacher: selectedTeacher,
       uploaded_filename: uploadedFile?.serverFilename || null,
+      document_context: uploadedFile?.clientText || null,
     });
   };
 
@@ -262,6 +276,12 @@ export default function LessonConfigurator({
               className={`sleek-upload-box ${isDragOver ? "is-drag-over" : ""} ${
                 isUploading ? "is-uploading" : ""
               }`}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                if (e.target.tagName !== "INPUT" && fileInputRef.current) {
+                  fileInputRef.current.click();
+                }
+              }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -276,15 +296,21 @@ export default function LessonConfigurator({
                 </div>
                 <div className="sleek-upload-text">
                   <span className="sleek-main-text">
-                    {isUploading ? "Uploading context..." : "Upload notes, PDF, DOCX, or slides"}
+                    {isUploading ? "Uploading & parsing document..." : "Upload notes, PDF, DOCX, PPTX, or text"}
                   </span>
-                  <span className="sleek-sub-text">Optional grounding material</span>
+                  <span className="sleek-sub-text">Click or drag & drop textbook or notes</span>
                 </div>
-                <label className="sleek-browse-btn">
+                <label
+                  className="sleek-browse-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <span>Browse</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.docx,.pptx,.txt"
+                    accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.markdown,.csv,.json"
                     onChange={handleFileInput}
                     disabled={isUploading}
                     className="visually-hidden"
