@@ -308,6 +308,7 @@ export default function App() {
         <MaterialsView
           searchHistory={searchHistory}
           onNavigateTab={setActiveNavTab}
+          onRefreshHistory={refreshSearchHistory}
         />
       )}
 

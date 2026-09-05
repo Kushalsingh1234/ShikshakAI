@@ -30,9 +30,15 @@ export default function LessonControl({
     try {
       const res = await uploadDocument(file);
       setUploadedFileName(res.filename);
-      setTopic(file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
+      if (!topic.trim()) {
+        setTopic(res.suggested_topic || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
+      }
     } catch (err) {
-      alert("Failed to upload document: " + err.message);
+      console.warn("Upload fallback notice:", err);
+      setUploadedFileName(file.name);
+      if (!topic.trim()) {
+        setTopic(file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
+      }
     } finally {
       setIsUploading(false);
     }
@@ -144,13 +150,13 @@ export default function LessonControl({
                   ? `Attached: ${uploadedFileName}`
                   : "Upload notes, textbook, or research paper"}
               </span>
-              <span className="dropzone-secondary">Supported: PDF, DOCX, PPTX, TXT</span>
+              <span className="dropzone-secondary">Supported: PDF, DOCX, PPTX, TXT, MD, CSV</span>
             </div>
             <label className="browse-files-btn">
               <span>Browse</span>
               <input
                 type="file"
-                accept=".pdf,.docx,.pptx,.txt"
+                accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.markdown,.csv,.json"
                 onChange={handleFileUpload}
                 style={{ display: "none" }}
               />
